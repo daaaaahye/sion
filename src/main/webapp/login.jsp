@@ -49,7 +49,7 @@
         <form action="login_process.jsp" method="post">
             <div class="input-group">
                 <label>社員番号 (ID)</label>
-                <input type="text" name="id" placeholder="社員番号を入力してください" required>
+                <input type="text" name="aid" placeholder="社員番号を入力してください" required>
             </div>
             <div class="input-group">
                 <label>パスワード</label>
