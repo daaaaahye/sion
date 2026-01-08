@@ -1,24 +1,24 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
 <%
-    String empId = request.getParameter("emp_id");
+    String id = request.getParameter("emp_id");
     String password = request.getParameter("password");
 
     Connection conn = null;
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "inseo", "");
+        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "사용자입력", "비밀번호입력");
 
         // DB에서 사번과 비밀번호가 일치하는지 확인
-        String sql = "SELECT emp_id, name FROM admins WHERE emp_id = ? AND password = ?";
+        String sql = "SELECT id, name FROM Administrator WHERE id = ? AND password = ?";
         PreparedStatement pstmt = conn.prepareStatement(sql);
-        pstmt.setString(1, empId);
+        pstmt.setString(1, id); /*여기 id로 바꿔야 하는 거 아닌가?*/
         pstmt.setString(2, password);
         ResultSet rs = pstmt.executeQuery();
 
         if (rs.next()) {
             // [핵심] 로그인 성공 시 세션에 사번 저장
-            session.setAttribute("adminId", rs.getString("emp_id"));
+            session.setAttribute("adminId", rs.getString("id"));
             // 메인 페이지로 이동
             response.sendRedirect("dbtest.jsp");
         } else {
