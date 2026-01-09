@@ -14,7 +14,7 @@
 
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "inseo", "");
+        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "");
 
         String sqlAdmin = "SELECT name FROM admins WHERE emp_id = ?";
         PreparedStatement pstmtAdmin = conn.prepareStatement(sqlAdmin);

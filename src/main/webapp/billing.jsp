@@ -70,7 +70,7 @@
             String id = request.getParameter("id");
             if(id == null) id = "1651841"; // 샘플 아이디
 
-            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "inseo", "");
+            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "");
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM customers WHERE meter_id = ?");
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
