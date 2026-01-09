@@ -28,7 +28,7 @@
         connWsms = DriverManager.getConnection(
             "jdbc:postgresql://localhost:5432/wsms",
             "postgres",
-            "Thewoo87!"
+            "1234"   // ⚠️ PostgreSQL 비밀번호
         );
 
         /* ===============================

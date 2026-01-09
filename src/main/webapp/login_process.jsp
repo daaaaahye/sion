@@ -28,7 +28,7 @@
         conn = DriverManager.getConnection(
             "jdbc:postgresql://localhost:5432/root",
             "postgres",
-            "Thewoo87!"   // ⚠️ PostgreSQL 비밀번호
+            "1234"   // ⚠️ PostgreSQL 비밀번호
         );
 
         /* ===============================
