@@ -1,115 +1,89 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
+<%@ page import="java.text.DecimalFormat" %>
+<%
+    String sessionAdminId = (String) session.getAttribute("adminId");
+    String adminName = (String) session.getAttribute("adminName");
+    String customerId = request.getParameter("customer_id");
+
+    if (sessionAdminId == null) { response.sendRedirect("login.jsp"); return; }
+    if (adminName == null) adminName = "관리자";
+    if (customerId == null) customerId = "C001";
+
+    Connection conn = null;
+    DecimalFormat df = new DecimalFormat("#,###");
+    
+    try {
+        Class.forName("org.postgresql.Driver");
+        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        
+        String sql = "SELECT c.name, c.tel, c.address, COALESCE(SUM(b.bill_amount), 0) as total_bill " +
+                     "FROM public.customers c LEFT JOIN public.bill b ON c.customer_id = b.customer_id " +
+                     "WHERE c.customer_id = ? GROUP BY c.name, c.tel, c.address";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, customerId);
+        ResultSet rs = pstmt.executeQuery();
+%>
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>청구서 발행 - 상수도 관리 시스템</title>
+    <title>청구서 발행 - SMART WATER</title>
     <style>
-        /* 공통 네비게이션 스타일 */
         * { box-sizing: border-box; }
-        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; background-color: #f0f2f5; }
-        .navbar { background-color: #2c3e50; color: white; min-height: 65px; display: flex; align-items: center; padding: 0 20px; flex-wrap: wrap; }
-        .navbar-brand { font-size: 20px; font-weight: bold; color: #3498db; text-decoration: none; padding: 15px 0; margin-right: 30px; }
-        .nav-links { list-style: none; display: flex; gap: 10px; margin: 0; padding: 0; flex-wrap: wrap; }
-        .nav-links li a { color: #bdc3c7; text-decoration: none; font-size: 14px; padding: 10px 12px; display: inline-block; }
-        .nav-links li a.active { color: white; border-bottom: 3px solid #3498db; }
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; background-color: #f8f9fa; }
+        .navbar { background-color: #2c3e50; color: white; height: 60px; display: flex; align-items: center; padding: 0 30px; }
+        .navbar-brand { font-size: 18px; font-weight: bold; color: #3498db; text-decoration: none; margin-right: 40px; }
+        .nav-links { list-style: none; display: flex; gap: 20px; margin: 0; padding: 0; }
+        .nav-links li a { color: #bdc3c7; text-decoration: none; font-size: 14px; font-weight: 500; }
+        .nav-links li a.active { color: white; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        .admin-area { padding: 0 30px; margin-left: auto; display: flex; align-items: center; gap: 10px; }
+        .admin-text { display: flex; flex-direction: column; text-align: right; font-size: 12px; color: #bdc3c7; }
+        .admin-name { font-weight: bold; color: white; }
+        .btn-logout { color: #e74c3c; text-decoration: none; font-size: 12px; margin-left: 15px; border: 1px solid #e74c3c; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
         
         .main-container { padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
-
-        /* [고지서 전용 스타일] */
-        .bill-paper { 
-            width: 100%; 
-            max-width: 700px; 
-            background: white; 
-            padding: 50px; 
-            border: 1px solid #ccc; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            position: relative;
-        }
-        .bill-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        .bill-paper { width: 100%; max-width: 700px; background: white; padding: 50px; border: 1px solid #ccc; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-radius: 8px; }
+        .bill-header { text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 20px; margin-bottom: 30px; }
         .bill-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        .bill-table th, .bill-table td { border: 1px solid #333; padding: 12px; text-align: left; }
-        .bill-table th { background: #f8f9fa; width: 30%; }
-        .total-amount { font-size: 24px; font-weight: bold; color: #e74c3c; text-align: right; margin-top: 20px; }
-        
-        .btn-print { 
-            margin-top: 30px; 
-            padding: 12px 30px; 
-            background: #2c3e50; 
-            color: white; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-weight: bold;
-        }
+        .bill-table th, .bill-table td { border: 1px solid #eee; padding: 15px; text-align: left; }
+        .bill-table th { background: #fcfcfc; width: 30%; color: #7f8c8d; }
+        .total-amount { font-size: 24px; font-weight: bold; color: #e74c3c; text-align: right; }
+        .btn-print { margin-top: 30px; padding: 12px 30px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
-        /* 인쇄 시 네비게이션 숨기기 */
-        @media print {
-            .navbar, .btn-print { display: none; }
-            body { background: white; }
-            .main-container { padding: 0; }
-            .bill-paper { border: none; box-shadow: none; width: 100%; }
-        }
+        @media print { .navbar, .btn-print { display: none; } .bill-paper { border: none; box-shadow: none; } }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <a href="dbtest.jsp" class="navbar-brand">💧 SMART WATER</a>
         <ul class="nav-links">
-            <li><a href="dbtest.jsp">대시보드</a></li>
-            <li><a href="#">고객 관리</a></li>
-            <li><a href="overdue_list.jsp">연체/미납 관리</a></li>
-            <li><a href="billing.jsp" class="active">청구서 발행</a></li>
+            <li><a href="customer_list.jsp" class="active">고객 리스트</a></li>
+            <li><a href="district_manage.jsp">관할 구역 관리</a></li>
+            <li><a href="overdue_list.jsp">연체 관리</a></li>
+            <li><a href="#">입금 관리</a></li>
+            <li><a href="#">청구 관리</a></li>
         </ul>
+        <div class="admin-area">
+            <div class="admin-text"><div class="admin-name"><%= adminName %> 님</div><div class="admin-id">사원번호 <%= sessionAdminId %></div></div>
+            <a href="logout.jsp" class="btn-logout">로그아웃</a>
+        </div>
     </nav>
-
     <div class="main-container">
-        <%
-            String id = request.getParameter("id");
-            if(id == null) id = "1651841"; // 샘플 아이디
-
-            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "inseo", "");
-            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM customers WHERE meter_id = ?");
-            pstmt.setString(1, id);
-            ResultSet rs = pstmt.executeQuery();
-
-            if(rs.next()) {
-                int total = rs.getInt("usage_amount") + rs.getInt("overdue_amount");
-        %>
+        <% if(rs.next()) { long total = rs.getLong("total_bill"); %>
             <div class="bill-paper">
-                <div class="bill-header">
-                    <h1 style="margin:0;">상수도 요금 청구서</h1>
-                    <p style="color:#666;">발행일: 2026년 1월 7일</p>
-                </div>
-                
+                <div class="bill-header"><h1>상수도 요금 청구서</h1><p>발행일: 2026년 1월 14일</p></div>
                 <table class="bill-table">
-                    <tr><th>성함</th><td><%= rs.getString("name") %> 님</td></tr>
-                    <tr><th>계량기 번호</th><td><%= rs.getString("meter_id") %></td></tr>
+                    <tr><th>성함</th><td><%= rs.getString("name") %> 様</td></tr>
+                    <tr><th>전화번호</th><td><%= rs.getString("tel") %></td></tr>
                     <tr><th>주소</th><td><%= rs.getString("address") %></td></tr>
-                    <tr><th>당월 사용 요금</th><td><%= String.format("%,d", rs.getInt("usage_amount")) %>원</td></tr>
-                    <tr><th>연체 미납액</th><td><%= String.format("%,d", rs.getInt("overdue_amount")) %>원</td></tr>
+                    <tr><th>총 청구 금액</th><td>₩<%= df.format(total) %></td></tr>
                 </table>
-                
-                <div class="total-amount">
-                    총 납부금액: <%= String.format("%,d", total) %>원
-                </div>
-                
-                <div style="margin-top:40px; border-top: 1px dashed #ccc; padding-top:20px; font-size:14px; line-height:1.6;">
-                    * 납부 기한: 2026년 1월 31일<br>
-                    * 납부 계좌: 신한은행 110-123-456789 (서울특별시 수도국)<br>
-                    * 문의 전화: 02-120 (다산콜센터)
-                </div>
+                <div class="total-amount">납부하실 금액: ₩<%= df.format(total) %></div>
             </div>
-            
             <button class="btn-print" onclick="window.print()">🖨️ 청구서 인쇄하기</button>
-        <% 
-            } else { 
-                out.println("<h3>해당 고객 정보를 찾을 수 없습니다.</h3>");
-            } 
-            conn.close();
-        %>
+        <% } %>
     </div>
 </body>
 </html>
+<% } catch(Exception e) { e.printStackTrace(); } finally { if(conn != null) conn.close(); } %>
