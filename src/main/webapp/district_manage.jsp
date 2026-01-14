@@ -13,7 +13,7 @@
     Connection conn = null;
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "inseo", "");
+        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
         
         // [2. DBから実際の管理者名を取得]
         String sqlAdmin = "SELECT name FROM admins WHERE emp_id = ?";
