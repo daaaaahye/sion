@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*" %>
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="java.util.Locale" %>
@@ -10,23 +11,17 @@
     String adminName = (String) session.getAttribute("adminName");
     String adminId = (String) session.getAttribute("adminId");
     
-    // 未ログイン時のリダイレクト (미로그인 시 리다이렉트)
     if (adminName == null || adminId == null) {
         response.sendRedirect("login.jsp");
         return;
     }
 
     /* ========================================================
-       2. 日付および曜日の処理 (날짜 및 요일 처리)
+       2. 日付処理 (날짜 처리)
        ======================================================== */
     String searchDateParam = request.getParameter("search_date");
-
-    LocalDate baseDate;
-    if (searchDateParam == null || searchDateParam.isEmpty()) {
-        baseDate = LocalDate.now(); 
-    } else {
-        baseDate = LocalDate.parse(searchDateParam); 
-    }
+    LocalDate baseDate = (searchDateParam == null || searchDateParam.isEmpty()) 
+                         ? LocalDate.now() : LocalDate.parse(searchDateParam);
 
     String inputDateValue = baseDate.toString();
     DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("yyyy年 MM月 dd日", Locale.JAPAN);
@@ -42,6 +37,46 @@
         case SATURDAY:  dayOfWeekJP = "土"; break;
         default:        dayOfWeekJP = "日";
     }
+
+    /* ========================================================
+    3. DB連携および滞納者照会 (DB 연동 및 조회)
+    ======================================================== */
+	 Connection conn = null;
+	 PreparedStatement pstmt = null;
+	 ResultSet rs = null;
+
+	 try {
+	     Class.forName("org.postgresql.Driver");
+	     conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+	
+	     // 수정된 SQL: 누적 미납 로직 반영
+	     String sql = 
+	         "SELECT " +
+	         "    c.name, " +
+	         "    MIN(b.billing_date) AS oldest_unpaid_date, " +
+	         "    (SELECT COALESCE(SUM(bill_amount), 0) FROM public.bill WHERE customer_id = c.customer_id AND billing_date <= ?) " +
+	         "    - (SELECT COALESCE(SUM(paid_amount), 0) FROM public.deposit WHERE customer_id = c.customer_id AND paid_at <= ?) AS total_overdue_amount " +
+	         "FROM public.customers c " +
+	         "JOIN public.bill b ON c.customer_id = b.customer_id " +
+	         "WHERE b.billing_date <= ? " +
+	         "GROUP BY c.customer_id, c.name " +
+	         "HAVING (SELECT COALESCE(SUM(bill_amount), 0) FROM public.bill WHERE customer_id = c.customer_id AND billing_date <= ?) " +
+	         "       - (SELECT COALESCE(SUM(paid_amount), 0) FROM public.deposit WHERE customer_id = c.customer_id AND paid_at <= ?) > 0 " +
+	         "ORDER BY oldest_unpaid_date ASC";
+	
+	     pstmt = conn.prepareStatement(sql);
+	     
+	     // java.sql.Date 변환
+	     java.sql.Date sqlBaseDate = java.sql.Date.valueOf(baseDate);
+	
+	     // 5개의 물음표(?)에 순서대로 값을 바인딩합니다.
+	     pstmt.setDate(1, sqlBaseDate); // SELECT절 청구합계 기준일
+	     pstmt.setDate(2, sqlBaseDate); // SELECT절 입금합계 기준일
+	     pstmt.setDate(3, sqlBaseDate); // WHERE절 대상 청구서 기준일
+	     pstmt.setDate(4, sqlBaseDate); // HAVING절 청구합계 기준일
+	     pstmt.setDate(5, sqlBaseDate); // HAVING절 입금합계 기준일
+	
+	     rs = pstmt.executeQuery();
 %>
 
 <!DOCTYPE html>
@@ -51,7 +86,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>滞納顧客管理 - SMART WATER JP</title>
     <style>
-        /* CSS 스타일은 동일하게 유지됩니다 */
         * { box-sizing: border-box; }
         body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; margin: 0; background-color: #f5f6f8; color: #111827; }
         .navbar { background-color: #243646; min-height: 70px; display: flex; align-items: center; padding: 10px 4%; position: sticky; top: 0; z-index: 1000; }
@@ -62,7 +96,6 @@
         .admin-area { margin-left: auto; display: flex; align-items: center; gap: 10px; }
         .admin-name { font-size: 14px; font-weight: 700; color: #ffffff; }
         .admin-id { font-size: 11px; color: #9fb0c3; }
-        .admin-icon { width: 32px; height: 32px; border-radius: 50%; background: #ffffff; display: grid; place-items: center; }
         .filter-container { max-width: 1400px; width: 92%; margin: 20px auto 0; display: flex; justify-content: flex-end; }
         .date-selector { background: white; padding: 10px 18px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px; }
         .date-input { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
@@ -83,33 +116,35 @@
     </style>
 </head>
 <body>
-    
     <nav class="navbar">
-        <a href="#" class="navbar-brand">💧 SMART WATER JP</a>
+        <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
         <ul class="nav-links">
-            <li><a href="#">顧客一覧</a></li>
-            <li><a href="#">管轄区域管理</a></li>
-            <li><a href="#" class="active">滞納管理</a></li>
-            <li><a href="#">入金管理</a></li>
-            <li><a href="#">請求照会</a></li>
+            <li><a href="customer_list.jsp">顧客一覧</a></li>
+            <li><a href="district_manage.jsp">管轄区域管理</a></li>
+            <li><a href="overdue_list.jsp" class="active">滞納管理</a></li>
+            <li><a href="deposit_manage.jsp">入金管理</a></li>
         </ul>
-
         <div class="admin-area">
             <div class="admin-text">
                 <div class="admin-name"><%= adminName %> 様</div>
                 <div class="admin-id">社員番号 <%= adminId %></div>
             </div>
-            <div class="admin-icon">👤</div>
         </div>
     </nav>
 
-    <div class="filter-container">
-        <form action="overdue_list.jsp" method="get" class="date-selector">
-            <label for="base-date">日付変更</label>
-            <input type="date" name="search_date" id="base-date" class="date-input" value="<%= inputDateValue %>">
-            <button type="submit" class="btn-search">適用</button>
-        </form>
-    </div>
+	<div class="filter-container">
+	    <form action="overdue_list.jsp" method="get" class="date-selector">
+	        <%-- '기준일 변경'에서 '날짜 선택'으로 변경 --%>
+	        <label for="base-date">日付を選択</label> 
+	        <input type="date" 
+	               name="search_date" 
+	               id="base-date" 
+	               class="date-input" 
+	               value="<%= inputDateValue %>" 
+	               max="<%= java.time.LocalDate.now() %>">
+	        <button type="submit" class="btn-search">適用</button>
+	    </form>
+	</div>
 
     <div class="main-container">
         <div class="content-card">
@@ -119,7 +154,7 @@
 
             <div class="section-header">
                 <h2 class="section-title">🚨 滞納顧客の現状</h2>
-                <p class="section-subtitle">現在、料金の支払いが確認できていない顧客リストです。</p>
+                <p class="section-subtitle">基準日現在、料金の支払いが確認できていない顧客リストです。</p>
             </div>
             
             <div class="table-wrapper">
@@ -127,26 +162,52 @@
                     <thead>
                         <tr>
                             <th>顧客名</th>
-                            <th>滞納期間</th>
-                            <th>滞納金額</th>
+                            <th>未納期間</th>
+                            <th>未納金額</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><b>田中 太郎</b></td>
-                            <td><span class="warn-badge">3ヶ月</span></td>
-                            <td class="text-right" style="color:#e74c3c; font-weight:bold;">4,500円</td>
-                        </tr>
-                        <tr>
-                            <td><b>鈴木 一郎</b></td>
-                            <td><span class="warn-badge">5ヶ月</span></td>
-                            <td class="text-right" style="color:#e74c3c; font-weight:bold;">12,400円</td>
-                        </tr>
-                    </tbody>
+						<tbody>
+						    <% 
+						        boolean hasData = false;
+						        while(rs.next()) { 
+						            hasData = true;
+						            // 미납 기간 표시 (이미지 요구사항: 입금 내역 여부에 따라 날짜 표시)
+						            Date oldestDate = rs.getDate("oldest_unpaid_date");
+						            long overdueAmount = rs.getLong("total_overdue_amount");
+						    %>
+						    <tr>
+						        <td><b><%= rs.getString("name") %></b></td>
+						        <td>
+						            <span class="warn-badge">
+						                <%= oldestDate %> ~ 
+						            </span>
+						            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">(未納発生日)</div>
+						        </td>
+						        <td class="text-right" style="color:#e74c3c; font-weight:bold;">
+						            <%= String.format("%,d", overdueAmount) %>円
+						        </td>
+						    </tr>
+						    <% } 
+						       if(!hasData) { %>
+						    <tr>
+						        <td colspan="3" style="padding: 50px; color: #6b7280; text-align: center;">対象となる滞納 데이터はありません。</td>
+						    </tr>
+						    <% } %>
+						</tbody>
                 </table>
             </div>
         </div>
     </div>
-
 </body>
 </html>
+
+<%
+    } catch (Exception e) {
+        out.println("<div style='color:red; padding:20px;'>システムエラーが発生しました: " + e.getMessage() + "</div>");
+        e.printStackTrace();
+    } finally {
+        if (rs != null) try { rs.close(); } catch(Exception e) {}
+        if (pstmt != null) try { pstmt.close(); } catch(Exception e) {}
+        if (conn != null) try { conn.close(); } catch(Exception e) {}
+    }
+%>
