@@ -1,190 +1,340 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
-<%@ page import="java.util.*" %>
-<%
-    // [1. セキュリティ及びセッションチェック] ログイン状態の確認
-    String sessionAdminId = (String) session.getAttribute("adminId");
-    if (sessionAdminId == null) {
-        response.sendRedirect("login.jsp"); 
-        return;
-    }
 
-    String adminName = "";
+<%
+    request.setCharacterEncoding("UTF-8");
+
+    // ✅ DB에서 customers 데이터 읽어서 JS 배열 rows로 만들기
     Connection conn = null;
+    Statement stmt = null;
+    ResultSet rs = null;
+
+    StringBuilder rowsJs = new StringBuilder();
+
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "inseo", "");
-        
-        // [2. DBから実際の管理者名を取得]
-        String sqlAdmin = "SELECT name FROM admins WHERE emp_id = ?";
-        PreparedStatement pstmtAdmin = conn.prepareStatement(sqlAdmin);
-        pstmtAdmin.setString(1, sessionAdminId);
-        ResultSet rsAdmin = pstmtAdmin.executeQuery();
-        if(rsAdmin.next()) {
-            adminName = rsAdmin.getString("name");
+        conn = DriverManager.getConnection(
+            "jdbc:postgresql://localhost:5432/wsms",
+            "postgres",
+            "1234"
+        );
+
+        // ✅ DB 컬럼에 맞춰서 조회
+        String sql = "SELECT name, district, address FROM customers ORDER BY district ASC, name ASC";
+
+        stmt = conn.createStatement();
+        rs = stmt.executeQuery(sql);
+        boolean first = true;
+
+        while (rs.next()) {
+            String name = rs.getString("name");
+            String district = rs.getString("district");
+            String address = rs.getString("address");
+
+            // ✅ JS 문자열 안전 처리 (\r 도 같이 제거!!)
+            name = (name == null ? "" : name.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\r", " ")
+                    .replace("\n", " "));
+            district = (district == null ? "" : district.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\r", " ")
+                    .replace("\n", " "));
+            address = (address == null ? "" : address.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\r", " ")
+                    .replace("\n", " "));
+
+            // ✅ 콤마를 "앞에"만 붙여서 마지막 콤마 문제 제거
+            if (!first) rowsJs.append(",\n");
+            first = false;
+
+            rowsJs.append("{ ")
+                  .append("name: \"").append(name).append(" 様\", ")
+                  .append("district: \"").append(district).append("\", ")
+                  .append("address: \"").append(address).append("\"")
+                  .append(" }");
         }
+
+    } catch (Exception e) {
+        out.println("<div style='color:red; text-align:center; padding:20px;'>エラー発生: " + e.getMessage() + "</div>");
+    } finally {
+        if (rs != null) try { rs.close(); } catch(Exception e) {}
+        if (stmt != null) try { stmt.close(); } catch(Exception e) {}
+        if (conn != null) try { conn.close(); } catch(Exception e) {}
+    }
 %>
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管轄区域管理 - 水道管理システム</title>
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif; margin: 0; background-color: #f8f9fa; color: #333; }
-        .navbar { background-color: #2c3e50; color: white; height: 60px; display: flex; align-items: center; padding: 0 30px; position: sticky; top: 0; z-index: 1000; }
-        .navbar-brand { font-size: 18px; font-weight: bold; color: #3498db; text-decoration: none; margin-right: 40px; }
-        .nav-links { list-style: none; display: flex; gap: 25px; margin: 0; padding: 0; }
-        .nav-links li a { color: #bdc3c7; text-decoration: none; font-size: 15px; font-weight: 500; }
-        .nav-links li a.active { color: white; border-bottom: 3px solid #3498db; padding-bottom: 5px; }
-        
-        .admin-mini-bar { background: #fff; padding: 8px 30px; border-bottom: 1px solid #ddd; display: flex; justify-content: flex-end; font-size: 12px; color: #666; }
-        .btn-logout { color: #e74c3c; text-decoration: none; margin-left: 15px; font-weight: bold; }
+  <meta charset="UTF-8">
+  <title>管轄区域管理 - 水道管理システム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        .main-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .content-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .section-title { font-size: 20px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; border-left: 5px solid #3498db; padding-left: 10px; }
-        
-        .search-box { background: #f1f3f5; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
-        .search-group { display: flex; flex-direction: column; gap: 8px; }
-        .search-group label { font-weight: bold; font-size: 13px; color: #495057; }
-        
-        select, input[type="text"], .btn-search { padding: 10px 15px; border-radius: 5px; border: 1px solid #ddd; font-size: 14px; height: 40px; }
-        .btn-search { background: #3498db; color: white; cursor: pointer; font-weight: bold; border: none; transition: 0.2s; padding: 0 25px; }
-        .btn-search:hover { background: #2980b9; }
-        .btn-reset { text-decoration: none; font-size: 13px; color: #888; margin-left: 5px; line-height: 40px; }
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: "Meiryo","Hiragino Kaku Gothic ProN",sans-serif; margin:0; background:#f8f9fa; color:#333; }
 
-        .table-wrapper { overflow-x: auto; width: 100%; }
-        .data-table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        .data-table th { background: #f8f9fa; padding: 15px; text-align: center; border-bottom: 2px solid #eee; font-size: 14px; }
-        .data-table td { padding: 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; }
-        .status-dot { color: #2ecc71; margin-right: 5px; }
-        code { background:#e9ecef; padding:3px 6px; border-radius:4px; font-family: 'Consolas', monospace; }
+    .navbar { height:56px; background:#243646; display:flex; align-items:center; padding:0 22px; gap:26px; }
+    .navbar-brand { display:flex; align-items:center; gap:8px; font-weight:800; font-size:16px; color:#2aa3ff; text-decoration:none; white-space:nowrap; }
+    .nav-links { list-style:none; display:flex; align-items:center; gap:18px; margin:0; padding:0; }
+    .nav-links a { color:#cbd5e1; text-decoration:none; font-size:13px; font-weight:600; padding:18px 6px 14px; border-bottom:2px solid transparent; white-space:nowrap; }
+    .nav-links a:hover { color:#fff; }
+    .nav-links a.active { color:#fff; border-bottom-color:#2aa3ff; }
 
-        @media (max-width: 768px) {
-            .search-box { flex-direction: column; align-items: stretch; }
-        }
-    </style>
+    .admin-area { margin-left:auto; display:flex; align-items:center; gap:10px; }
+    .admin-text { display:flex; flex-direction:column; align-items:flex-end; line-height:1.1; white-space:nowrap; }
+    .admin-name { font-size:12px; font-weight:700; color:#e5edf5; }
+    .admin-id { font-size:11px; color:#9fb0c3; }
+    .admin-icon { width:30px; height:30px; border-radius:50%; background:#fff; display:grid; place-items:center; box-shadow:0 0 0 2px rgba(255,255,255,.35); }
+    .admin-icon svg { width:18px; height:18px; opacity:.75; }
+
+    .main-container { max-width:1200px; margin:26px auto; padding:0 20px; }
+    .content-card { background:#fff; border-radius:12px; padding:24px; box-shadow:0 4px 12px rgba(0,0,0,0.05); }
+    .section-title { font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:12px; border-left:5px solid #2aa3ff; padding-left:10px; }
+
+    .search-notice { margin:10px 0 14px; padding:12px 14px; border-radius:10px; background:#f1f6fb; border:1px solid #dbe9f6; font-size:13px; line-height:1.55; }
+
+    .search-box { background:#f1f3f5; padding:18px; border-radius:10px; margin-bottom:16px; display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap; }
+    .search-group { display:flex; flex-direction:column; gap:8px; }
+    .search-group label { font-weight:bold; font-size:13px; }
+
+    select, input[type="text"], .btn-search {
+      padding:10px 14px;
+      padding-right:40px;
+      border-radius:7px;
+      border:1px solid #d9dde3;
+      font-size:14px;
+      height:40px;
+    }
+    .btn-search { background:#2aa3ff; color:#fff; cursor:pointer; font-weight:800; border:none; }
+    .btn-reset { background:#eee; padding:10px 20px; border-radius:6px; border:1px solid #ddd; height:40px; cursor:pointer; }
+
+    .result-count { margin:10px 0; font-size:13px; font-weight:bold; }
+
+    .data-table { width:100%; border-collapse:collapse; margin-top:10px; table-layout: fixed;  }
+    .data-table th, .data-table td { padding:14px; border-bottom:1px solid #eee; text-align:center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .data-table td.addr { text-align:center; }
+
+    .no-result { padding:18px; text-align:center; color:#666; border:1px dashed #ccc; border-radius:10px; margin-top:10px; display:none; }
+
+    /* ✅ pagination */
+    .pagination {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      margin-top:16px;
+    }
+    .page-btn{
+      padding:10px 16px;
+      border:1px solid #d9dde3;
+      background:#fff;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:800;
+      height:40px;
+    }
+    .page-btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+    #pageInfo{
+      font-size:13px;
+      font-weight:800;
+    }
+  </style>
 </head>
+
 <body>
-    <nav class="navbar">
-        <a href="dbtest.jsp" class="navbar-brand">💧 SMART WATER JP</a>
-        <ul class="nav-links">
-            <li><a href="dbtest.jsp">ホーム</a></li>
-            <li><a href="customer_list.jsp">顧客一覧</a></li>
-            <li><a href="overdue_list.jsp">滞納者リスト</a></li>
-            <li><a href="district_manage.jsp" class="active">管轄区域管理</a></li>
-        </ul>
-    </nav>
 
-    <div class="admin-mini-bar">
-        <span>ログイン管理者: <b><%= adminName %></b> 様 (社員番号: <%= sessionAdminId %>)</span>
-        <a href="logout.jsp" class="btn-logout">ログアウト</a>
+  <nav class="navbar">
+    <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
+
+    <ul class="nav-links">
+      <li><a href="customer_list.jsp">顧客一覧</a></li>
+      <li><a href="district_manage.jsp" class="active">管轄区域管理</a></li>
+      <li><a href="overdue_list.jsp">滞納管理</a></li>
+      <li><a href="deposit_list.jsp">入金管理</a></li>
+      <li><a href="bill_list.jsp">請求管理</a></li>
+    </ul>
+
+    <div class="admin-area">
+      <div class="admin-text">
+        <div class="admin-name"><%= (session.getAttribute("adminName") != null ? session.getAttribute("adminName") : "管理者") %> 様</div>
+        <div class="admin-id">社員番号 <%= (session.getAttribute("adminId") != null ? session.getAttribute("adminId") : "") %></div>
+      </div>
+
+      <div class="admin-icon" title="管理者">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Z"
+                stroke="#111827" stroke-width="1.6"/>
+          <path d="M3 23c0-4.2 4-7.6 9-7.6s9 3.4 9 7.6"
+                stroke="#111827" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
     </div>
+  </nav>
 
-    <div class="main-container">
-        <div class="content-card">
-            <div class="section-title">📍 区域・メーター別 詳細管理</div>
-            
-            <form class="search-box" method="get">
-                <div class="search-group">
-                    <label>管轄区域</label>
-                    <select name="district">
-                        <option value="">全ての区域</option>
-                        <%-- 日本の地名の例に修正 --%>
-                        <option value="渋谷区" <%= "渋谷区".equals(request.getParameter("district")) ? "selected" : "" %>>東京都 渋谷区</option>
-                        <option value="新宿区" <%= "新宿区".equals(request.getParameter("district")) ? "selected" : "" %>>東京都 新宿区</option>
-                        <option value="港区" <%= "港区".equals(request.getParameter("district")) ? "selected" : "" %>>東京都 港区</option>
-                        <option value="中央区" <%= "中央区".equals(request.getParameter("district")) ? "selected" : "" %>>東京都 中央区</option>
-                    </select>
-                </div>
+  <div class="main-container">
+    <div class="content-card">
+      <div class="section-title">📍 区域・メーター別 詳細管理</div>
 
-                <div class="search-group">
-                    <label>メーター固有番号</label>
-                    <select name="meter_id">
-                        <option value="">全てのメーター</option>
-                        <%
-                            String sqlMeter = "SELECT DISTINCT meter_id FROM customers ORDER BY meter_id ASC";
-                            Statement stmtMeter = conn.createStatement();
-                            ResultSet rsMeter = stmtMeter.executeQuery(sqlMeter);
-                            while(rsMeter.next()) {
-                                String mId = rsMeter.getString("meter_id");
-                                String selected = mId.equals(request.getParameter("meter_id")) ? "selected" : "";
-                                out.println("<option value='" + mId + "' " + selected + ">" + mId + "</option>");
-                            }
-                        %>
-                    </select>
-                </div>
+      <div class="search-notice">
+        ※ 管轄区域および顧客名で検索できます。<br>
+        ※ 管轄区域の情報を確認できます。
+      </div>
 
-                <div class="search-group">
-                    <label>顧客名 検索</label>
-                    <input type="text" name="keyword" placeholder="お名前を入力" value="<%= request.getParameter("keyword") != null ? request.getParameter("keyword") : "" %>">
-                </div>
-
-                <button type="submit" class="btn-search">照会する</button>
-                <a href="district_manage.jsp" class="btn-reset">リセット</a>
-            </form>
-
-            <div class="table-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>氏名</th>
-                            <th>詳細住所</th>
-                            <th>メーター固有番号</th>
-                            <th>稼働状態</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%
-                            String district = request.getParameter("district");
-                            String meter_id = request.getParameter("meter_id");
-                            String keyword = request.getParameter("keyword");
-                            
-                            StringBuilder sql = new StringBuilder("SELECT * FROM customers WHERE 1=1");
-                            
-                            if(district != null && !district.isEmpty()) sql.append(" AND address LIKE ?");
-                            if(meter_id != null && !meter_id.isEmpty()) sql.append(" AND meter_id = ?");
-                            if(keyword != null && !keyword.isEmpty()) sql.append(" AND name LIKE ?");
-                            
-                            sql.append(" ORDER BY meter_id ASC, name ASC");
-                            
-                            PreparedStatement pstmt = conn.prepareStatement(sql.toString());
-                            
-                            int paramIndex = 1;
-                            if(district != null && !district.isEmpty()) pstmt.setString(paramIndex++, "%" + district + "%");
-                            if(meter_id != null && !meter_id.isEmpty()) pstmt.setString(paramIndex++, meter_id);
-                            if(keyword != null && !keyword.isEmpty()) pstmt.setString(paramIndex++, "%" + keyword + "%");
-                            
-                            ResultSet rs = pstmt.executeQuery();
-                            boolean hasData = false;
-                            while(rs.next()) {
-                                hasData = true;
-                        %>
-                        <tr>
-                            <td><b><%= rs.getString("name") %> 様</b></td>
-                            <td style="text-align: left;"><%= rs.getString("address") %></td>
-                            <td><code><%= rs.getString("meter_id") %></code></td>
-                            <td><span class="status-dot">●</span>正常稼働中</td>
-                        </tr>
-                        <% 
-                                }
-                                if(!hasData) {
-                                    out.println("<tr><td colspan='4' style='padding:50px; color:#999;'>条件に一致するデータがありません。</td></tr>");
-                                }
-                        %>
-                    </tbody>
-                </table>
-            </div>
+      <form class="search-box" onsubmit="return false;">
+        <div class="search-group">
+          <label>管轄区域</label>
+          <select id="districtSelect">
+            <option value="ALL">全ての区域</option>
+            <option value="東京都渋谷区">東京都 渋谷区</option>
+            <option value="東京都台東区">東京都 台東区</option>
+            <option value="東京都中央区">東京都 中央区</option>
+            <option value="東京都港区">東京都 港区</option>
+            <option value="東京都新宿区">東京都 新宿区</option>
+          </select>
         </div>
+
+        <div class="search-group">
+          <label>顧客名 検索</label>
+          <input type="text" id="nameInput" placeholder="お名前を入力">
+        </div>
+
+        <button type="button" class="btn-search" id="btnSearch" style="padding-left:25px; padding-right:25px;">検索</button>
+        <button type="button" class="btn-reset" id="btnReset">リセット</button>
+      </form>
+
+      <div class="result-count" id="resultCount">検索結果は0件です。</div>
+
+      <table class="data-table" id="dataTable">
+        <thead>
+          <tr>
+            <th>氏名</th>
+            <th>管轄区域</th>
+            <th>詳細住所</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div class="no-result" id="noResult">検索結果がありません。</div>
+
+      <!-- ✅ pagination UI -->
+      <div class="pagination" id="pagination" style="display:none;">
+        <button type="button" class="page-btn" id="btnPrev">前へ</button>
+        <span id="pageInfo">1 / 1 ページ</span>
+        <button type="button" class="page-btn" id="btnNext">次へ</button>
+      </div>
+
     </div>
+  </div>
+
+  <script>
+    // ✅ DB에서 읽어온 데이터를 rows 배열에 주입
+    const rows = [
+      <%= rowsJs.toString() %>
+    ];
+    console.log("rows length =", rows.length);
+
+    const districtSelect = document.getElementById("districtSelect");
+    const nameInput = document.getElementById("nameInput");
+    const tbody = document.getElementById("tbody");
+    const resultCount = document.getElementById("resultCount");
+    const noResult = document.getElementById("noResult");
+    const dataTable = document.getElementById("dataTable");
+    const pagination = document.getElementById("pagination");
+    const btnPrev = document.getElementById("btnPrev");
+    const btnNext = document.getElementById("btnNext");
+    const pageInfo = document.getElementById("pageInfo");
+
+    const PAGE_SIZE = 20;
+    let currentPage = 1;
+    let filteredRows = rows;
+
+    function renderTable(data) {
+      tbody.innerHTML = "";
+
+      const total = data.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      resultCount.textContent = "検索結果は" + total + "件です。";
+
+      if (total === 0) {
+        dataTable.style.display = "none";
+        noResult.style.display = "block";
+        pagination.style.display = "none";
+        return;
+      }
+
+      dataTable.style.display = "table";
+      noResult.style.display = "none";
+      pagination.style.display = "flex";
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = data.slice(start, start + PAGE_SIZE);
+
+      pageItems.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + r.name + "</td>" +
+          "<td>" + r.district + "</td>" +
+          "<td class='addr'>" + r.address + "</td>";
+        tbody.appendChild(tr);
+      });
+
+      pageInfo.textContent = currentPage + " / " + totalPages + " ページ";
+      btnPrev.disabled = (currentPage === 1);
+      btnNext.disabled = (currentPage === totalPages);
+    }
+
+    function applyFilter() {
+      const d = districtSelect.value;
+      const q = nameInput.value.trim().toLowerCase();
+
+      filteredRows = rows.filter(r => {
+        const okDistrict = (d === "ALL") || (r.district === d);
+        const okName = (!q) || (r.name.toLowerCase().includes(q));
+        return okDistrict && okName;
+      });
+
+      currentPage = 1;
+      renderTable(filteredRows);
+    }
+
+    document.getElementById("btnSearch").addEventListener("click", applyFilter);
+
+    document.getElementById("btnReset").addEventListener("click", () => {
+      districtSelect.value = "ALL";
+      nameInput.value = "";
+      filteredRows = rows;
+      currentPage = 1;
+      renderTable(filteredRows);
+    });
+
+    btnPrev.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable(filteredRows);
+      }
+    });
+
+    btnNext.addEventListener("click", () => {
+      const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTable(filteredRows);
+      }
+    });
+
+    // 초기 렌더
+    filteredRows = rows;
+    renderTable(filteredRows);
+  </script>
+
 </body>
 </html>
-<%
-    } catch (Exception e) {
-        out.println("<div style='text-align:center; padding:20px; color:red;'>エラー発生: " + e.getMessage() + "</div>");
-    } finally {
-        if(conn != null) conn.close();
-    }
-%>
