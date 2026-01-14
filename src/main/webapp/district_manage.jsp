@@ -20,29 +20,40 @@
         );
 
         // ✅ DB 컬럼에 맞춰서 조회
-        String sql = "SELECT customer_id, name, district, address FROM customers ORDER BY customer_id ASC, name ASC";
+        String sql = "SELECT name, district, address FROM customers ORDER BY district ASC, name ASC";
+
         stmt = conn.createStatement();
         rs = stmt.executeQuery(sql);
+        boolean first = true;
 
         while (rs.next()) {
-            String customerId = rs.getString("customer_id"); // 메ーター番号 대신 사용
-            String name = rs.getString("name");
+        	String name = rs.getString("name");
             String district = rs.getString("district");
             String address = rs.getString("address");
 
-            // JS 문자열 안전 처리 (따옴표/개행)
-            name = (name == null ? "" : name.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " "));
-            district = (district == null ? "" : district.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " "));
-            address = (address == null ? "" : address.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " "));
-            customerId = (customerId == null ? "" : customerId.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " "));
+            // ✅ JS 문자열 안전 처리 (\r 도 같이 제거!!)
+            name = (name == null ? "" : name.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\r", " ")
+                    .replace("\n", " "));
+            district = (district == null ? "" : district.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\r", " ")
+                    .replace("\n", " "));
+            address = (address == null ? "" : address.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\r", " ")
+                    .replace("\n", " "));
+
+            // ✅ 콤마를 "앞에"만 붙여서 마지막 콤마 문제 제거
+            if (!first) rowsJs.append(",\n");
+            first = false;
 
             rowsJs.append("{ ")
-                 .append("name: \"").append(name).append(" 様\", ")
-                 .append("district: \"").append(district).append("\", ")
-                 .append("address: \"").append(address).append("\", ")
-                 .append("meter: \"").append(customerId).append("\", ")
-                 .append("status: \"正常稼働中\"")
-                 .append(" },\n");
+                  .append("name: \"").append(name).append(" 様\", ")
+                  .append("district: \"").append(district).append("\", ")
+                  .append("address: \"").append(address).append("\"")
+                  .append(" }");
         }
 
     } catch (Exception e) {
@@ -104,7 +115,7 @@
 
     .data-table { width:100%; border-collapse:collapse; margin-top:10px; }
     .data-table th, .data-table td { padding:14px; border-bottom:1px solid #eee; text-align:center; }
-    .data-table td.addr { text-align:left; }
+    .data-table td.addr { text-align:center; }
 
     .no-result { padding:18px; text-align:center; color:#666; border:1px dashed #ccc; border-radius:10px; margin-top:10px; display:none; }
   </style>
@@ -145,20 +156,22 @@
       <div class="section-title">📍 区域・メーター別 詳細管理</div>
 
       <div class="search-notice">
-        ※ 管轄区域および顧客名を条件に検索が可能です。<br>
-        ※ ログイン中の管理者が担当する管轄区域のみ閲覧できます。
+        ※ 管轄区域および顧客名で検索できます。<br>
+        ※ 管轄区域の情報を確認できます。
       </div>
 
       <form class="search-box" onsubmit="return false;">
         <div class="search-group">
           <label>管轄区域</label>
           <select id="districtSelect">
-            <option value="ALL">全ての区域</option>
-            <option value="東京都 渋谷区">東京都 渋谷区</option>
-            <option value="東京都 新宿区">東京都 新宿区</option>
-            <option value="東京都 港区">東京都 港区</option>
-            <option value="東京都 中央区">東京都 中央区</option>
-          </select>
+			  <option value="ALL">全ての区域</option>
+			  <option value="東京都渋谷区">東京都 渋谷区</option>
+			  <option value="東京都台東区">東京都 台東区</option>
+			  <option value="東京都中央区">東京都 中央区</option>
+			  <option value="東京都港区">東京都 港区</option>
+			  <option value="東京都新宿区">東京都 新宿区</option>
+		  </select>
+
         </div>
 
         <div class="search-group">
@@ -176,9 +189,9 @@
         <thead>
           <tr>
             <th>氏名</th>
-            <th>詳細住所</th>
-            <th>メーター番号</th>
-            <th>稼働状態</th>
+			<th>管轄区域</th>
+			<th>詳細住所</th>
+
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -193,6 +206,7 @@
     const rows = [
       <%= rowsJs.toString() %>
     ];
+    console.log("rows length =", rows.length); // ✅ 이거 추가
 
     const districtSelect = document.getElementById("districtSelect");
     const nameInput = document.getElementById("nameInput");
@@ -203,7 +217,7 @@
 
     function renderTable(data) {
       tbody.innerHTML = "";
-      resultCount.textContent = `検索結果は${data.length}件です。`;
+      resultCount.textContent = "検索結果は" + data.length + "件です。";
 
       if (data.length === 0) {
         dataTable.style.display = "none";
@@ -216,12 +230,11 @@
 
       data.forEach(r => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r.name}</td>
-          <td class="addr">${r.address}</td>
-          <td>${r.meter}</td>
-          <td>${r.status}</td>
-        `;
+        tr.innerHTML =
+        	  "<td>" + r.name + "</td>" +
+        	  "<td>" + r.district + "</td>" +
+        	  "<td class='addr'>" + r.address + "</td>";
+        	
         tbody.appendChild(tr);
       });
     }
