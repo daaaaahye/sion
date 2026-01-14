@@ -56,7 +56,7 @@
             session.setAttribute("adminName", rs.getString("name"));
 
             // 메인 페이지로 이동
-            response.sendRedirect("dbtest.jsp");
+            response.sendRedirect("main.jsp");
         } else {
             // 로그인 실패 → 다시 로그인 페이지
             response.sendRedirect("login.jsp?error=1");
