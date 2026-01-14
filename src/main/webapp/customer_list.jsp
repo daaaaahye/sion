@@ -125,4 +125,6 @@
     </div>
 </body>
 </html>
-<% } catch (Exception e) { e.printStackTrace(); } finally { if(conn != null) conn.close(); } %>
+<%
+    } catch (Exception e) { out.println("Error: " + e.getMessage()); } finally { if(conn != null) conn.close(); }
+%>
