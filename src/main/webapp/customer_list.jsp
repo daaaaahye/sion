@@ -10,23 +10,26 @@
     }
 
     String adminName = (String) session.getAttribute("adminName"); 
-    if (adminName == null) adminName = "관리자"; 
+    if (adminName == null) adminName = "管理者"; 
 
     request.setCharacterEncoding("UTF-8");
     String searchName = request.getParameter("searchName");
     if (searchName == null) searchName = "";
 
-    Connection conn = null;
+    Connection connRoot = null; 
+    Connection connWsms = null; 
+    
     DecimalFormat df = new DecimalFormat("¥###,###");
     Random rnd = new Random(); 
 
-    
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        
+        connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
+        connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
 
-        String sqlAdmin = "SELECT name FROM admins WHERE emp_id = ?";
-        PreparedStatement pstmtAdmin = conn.prepareStatement(sqlAdmin);
+        String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";
+        PreparedStatement pstmtAdmin = connRoot.prepareStatement(sqlAdmin);
         pstmtAdmin.setString(1, sessionAdminId);
         ResultSet rsAdmin = pstmtAdmin.executeQuery();
         
@@ -36,13 +39,13 @@
         }
 %>
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>고객관리 - SMART WATER</title>
+    <title>顧客管理 - SMART WATER</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: "Malgun Gothic", sans-serif; margin: 0; background-color: #f8f9fa; }
+        body { font-family: "Meiryo", "Malgun Gothic", sans-serif; margin: 0; background-color: #f8f9fa; }
         .navbar { background-color: #2c3e50; color: white; height: 60px; display: flex; align-items: center; padding: 0 30px; }
         .navbar-brand { font-size: 18px; font-weight: bold; color: #3498db; text-decoration: none; margin-right: 40px; }
         .nav-links { list-style: none; display: flex; gap: 20px; margin: 0; padding: 0; }
@@ -73,21 +76,21 @@
     <nav class="navbar">
         <a href="main.jsp" class="navbar-brand">💧 SMART WATER</a>
         <ul class="nav-links">
-            <li><a href="customer_list.jsp" class="active">고객 리스트</a></li>
-            <li><a href="district_manage.jsp">관할 구역 관리</a></li>
-            <li><a href="overdue_list.jsp">연체 관리</a></li>
-            <li><a href="#">입금 관리</a></li>
-            <li><a href="#">청구 관리</a></li>
+            <li><a href="customer_list.jsp" class="active">顧客リスト</a></li>
+            <li><a href="district_manage.jsp">管轄区域管理</a></li>
+            <li><a href="overdue_list.jsp">延滞管理</a></li>
+            <li><a href="#">入金管理</a></li>
+            <li><a href="#">請求管理</a></li>
         </ul>
         <div class="admin-area">
             <div class="admin-text">
-                <div class="admin-name"><%= adminName %> 님</div>
-                <div class="admin-id">사원번호 <%= sessionAdminId %></div>
+                <div class="admin-name"><%= adminName %> 様</div>
+                <div class="admin-id">社員番号 <%= sessionAdminId %></div>
             </div>
             <div class="admin-icon">
                 <svg viewBox="0 0 24 24" fill="none"><path d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Z" stroke="#111827" stroke-width="1.6"/><path d="M3 23c0-4.2 4-7.6 9-7.6s9 3.4 9 7.6" stroke="#111827" stroke-width="1.6" stroke-linecap="round"/></svg>
             </div>
-            <a href="logout.jsp" class="btn-logout">로그아웃</a>
+            <a href="logout.jsp" class="btn-logout">ログアウト</a>
         </div>
     </nav>
 
@@ -95,19 +98,19 @@
         <div class="content-card">
             <h2>👥 顧客管理リスト</h2>
             <form class="search-box" action="customer_list.jsp" method="get">
-                <input type="text" name="searchName" value="<%= searchName %>" placeholder="お客様名を入力してください">
+                <input type="text" name="searchName" value="<%= searchName %>" placeholder="顧客名を入力してください">
                 <button type="submit" class="btn-search">検索</button>
-                <a href="customer_list.jsp" class="btn-reset">クリア</a>
+                <a href="customer_list.jsp" class="btn-reset">リセット</a>
             </form>
             <table class="list-table">
-                <thead><tr><th>お名前</th><th>ご住所</th><th>今月ご使用量</th></tr></thead>
+                <thead><tr><th>お名前</th><th>ご住所</th><th>今月の使用量</th></tr></thead>
                 <tbody>
                 <%
                     String sqlCust = "SELECT customer_id, name, address FROM customers";
                     if (!searchName.isEmpty()) sqlCust += " WHERE name LIKE ? ORDER BY name ASC";
                     else sqlCust += " ORDER BY name ASC";
                     
-                    PreparedStatement pstmtCust = conn.prepareStatement(sqlCust);
+                    PreparedStatement pstmtCust = connWsms.prepareStatement(sqlCust);
                     if (!searchName.isEmpty()) pstmtCust.setString(1, "%" + searchName + "%");
                     ResultSet rs = pstmtCust.executeQuery();
                     
@@ -126,5 +129,10 @@
 </body>
 </html>
 <%
-    } catch (Exception e) { out.println("Error: " + e.getMessage()); } finally { if(conn != null) conn.close(); }
+    } catch (Exception e) { 
+        out.println("<div style='color:red; padding:20px;'>Error: " + e.getMessage() + "</div>"); 
+    } finally { 
+        if(connRoot != null) try { connRoot.close(); } catch(SQLException e) {}
+        if(connWsms != null) try { connWsms.close(); } catch(SQLException e) {}
+    }
 %>
