@@ -23,13 +23,13 @@
         Class.forName("org.postgresql.Driver");
 
         /* ===============================
-           [2] wsms DB 연결 (customers, bill, deposit)
-           =============================== */
-        connWsms = DriverManager.getConnection(
-            "jdbc:postgresql://localhost:5432/wsms",
-            "postgres",
-            "Thewoo87!"
-        );
+        [2] wsms DB 연결 (customers, bill, deposit)
+        =============================== */
+     connWsms = DriverManager.getConnection(
+         "jdbc:postgresql://localhost:5432/wsms",
+         "postgres",
+         "1234" 
+     );
 
         /* ===============================
            [3] 총 고객 수 조회
@@ -97,8 +97,7 @@
     </nav>
 
     <div class="admin-mini-bar">
-        <!-- [5] 로그인한 관리자 정보 표시 (세션에서 가져옴) -->
-        <span>ログイン管理者: <b><%= (sessionAdminName != null ? sessionAdminName : "") %></b> 様 (社員番号: <%= sessionAdminId %>)</span>
+        <span>ログイン管理者: <b><%= (sessionAdminName != null ? sessionAdminName : "") %></b> 様 (社員번호: <%= sessionAdminId %>)</span>
         <a href="logout.jsp" class="btn-logout">ログアウト</a>
     </div>
 
@@ -112,7 +111,6 @@
             <div style="flex: 1; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
                 <h3>📊 本日の要約</h3>
 
-                <!-- [6] DB에서 조회한 통계 출력 -->
                 <p>総顧客数: <%= String.format("%,d", totalCount) %> 名 | 滞納顧客数: <%= String.format("%,d", overdueCount) %> 名</p>
 
                 <button onclick="location.href='overdue_list.jsp'"
