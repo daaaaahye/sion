@@ -110,7 +110,7 @@
 <body>
     <nav class="navbar">
         <%-- [수정 완료] href 주소를 dbtest.jsp로 변경하였습니다. --%>
-        <a href="dbtest.jsp" class="navbar-brand">💧 SMART WATER</a>
+        <a href="main.jsp" class="navbar-brand">💧 SMART WATER</a>
         <ul class="nav-links">
             <li><a href="customer_list.jsp" class="active">고객 리스트</a></li>
             <li><a href="district_manage.jsp">관할 구역 관리</a></li>
@@ -136,35 +136,35 @@
 
     <div class="main-container">
         <div class="detail-header">
-            <h2>고객 상세 정보</h2>
+            <h2>お客様詳細情報</h2>
         </div>
 
         <div class="info-grid">
             <div class="info-item">
-                <div class="info-label">고객명</div>
+                <div class="info-label">お客様名</div>
                 <div class="info-value"><%= name %> 様</div>
             </div>
             <div class="info-item">
-                <div class="info-label">전화번호</div>
+                <div class="info-label">電話番号</div>
                 <div class="info-value"><%= (phone != null) ? phone : "정보 없음" %></div>
             </div>
             <div class="info-item" style="grid-column: span 2;">
-                <div class="info-label">설치 주소</div>
+                <div class="info-label">設置場所住所</div>
                 <div class="info-value"><%= address %></div>
             </div>
             <div class="info-item">
-                <div class="info-label">미납 금액</div>
+                <div class="info-label">未払金額</div>
                 <div class="info-value">₩<%= df.format(unpaidAmount) %></div>
             </div>
             <div class="info-item">
-                <div class="info-label">연체 기간</div>
-                <div class="info-value"><%= overdueMonths %>개월</div>
+                <div class="info-label">滞納期間</div>
+                <div class="info-value"><%= overdueMonths %>ヶ月</div>
             </div>
         </div>
 
         <div class="btn-group">
-            <a href="customer_list.jsp" class="btn-back">← 고객 목록으로 돌아가기</a>
-            <a href="billing.jsp?customer_id=<%= customerId %>" class="btn-primary">청구서 조회</a>
+            <a href="customer_list.jsp" class="btn-back">← 顧客リストへ戻る</a>
+            <a href="billing.jsp?customer_id=<%= customerId %>" class="btn-primary">請求書を見る</a>
         </div>
     </div>
 </body>

@@ -71,7 +71,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="dbtest.jsp" class="navbar-brand">💧 SMART WATER</a>
+        <a href="main.jsp" class="navbar-brand">💧 SMART WATER</a>
         <ul class="nav-links">
             <li><a href="customer_list.jsp" class="active">고객 리스트</a></li>
             <li><a href="district_manage.jsp">관할 구역 관리</a></li>
@@ -93,14 +93,14 @@
 
     <div class="main-container">
         <div class="content-card">
-            <h2>👥 고객 관리 명부</h2>
+            <h2>👥 顧客管理リスト</h2>
             <form class="search-box" action="customer_list.jsp" method="get">
-                <input type="text" name="searchName" value="<%= searchName %>" placeholder="고객명을 입력하세요.">
-                <button type="submit" class="btn-search">검색</button>
-                <a href="customer_list.jsp" class="btn-reset">초기화</a>
+                <input type="text" name="searchName" value="<%= searchName %>" placeholder="お客様名を入力してください">
+                <button type="submit" class="btn-search">検索</button>
+                <a href="customer_list.jsp" class="btn-reset">クリア</a>
             </form>
             <table class="list-table">
-                <thead><tr><th>성함</th><th>상세 주소</th><th>당월 사용량</th></tr></thead>
+                <thead><tr><th>お名前</th><th>ご住所</th><th>今月ご使用量</th></tr></thead>
                 <tbody>
                 <%
                     String sqlCust = "SELECT customer_id, name, address FROM customers";
