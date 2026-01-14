@@ -20,6 +20,7 @@
     DecimalFormat df = new DecimalFormat("¥###,###");
     Random rnd = new Random(); 
 
+    
     try {
         Class.forName("org.postgresql.Driver");
         conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");

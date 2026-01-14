@@ -44,7 +44,7 @@
             session.setAttribute("adminName", adminName); 
         }
 
-        // 고객 정보 조회
+        // 고객 정보 조회.
         String sql = "SELECT name, tel, address FROM public.customers WHERE customer_id = ?";
         pstmt = conn.prepareStatement(sql);
         pstmt.setString(1, customerId); 
