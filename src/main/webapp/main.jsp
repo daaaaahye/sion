@@ -133,7 +133,7 @@
 	      <a href="#" class="dropdown-item">設定</a>
 	      <a href="logout.jsp" class="dropdown-item logout">ログアウト</a>
 	    </div>
-	  </div>
+	  </div>	
 	</nav>
 
     <div class="main-container">
