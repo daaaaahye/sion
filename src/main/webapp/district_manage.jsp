@@ -27,7 +27,7 @@
         boolean first = true;
 
         while (rs.next()) {
-        	String name = rs.getString("name");
+            String name = rs.getString("name");
             String district = rs.getString("district");
             String address = rs.getString("address");
 
@@ -113,18 +113,44 @@
 
     .result-count { margin:10px 0; font-size:13px; font-weight:bold; }
 
-    .data-table { width:100%; border-collapse:collapse; margin-top:10px; }
-    .data-table th, .data-table td { padding:14px; border-bottom:1px solid #eee; text-align:center; }
+    .data-table { width:100%; border-collapse:collapse; margin-top:10px; table-layout: fixed;  }
+    .data-table th, .data-table td { padding:14px; border-bottom:1px solid #eee; text-align:center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .data-table td.addr { text-align:center; }
 
     .no-result { padding:18px; text-align:center; color:#666; border:1px dashed #ccc; border-radius:10px; margin-top:10px; display:none; }
+
+    /* ✅ pagination */
+    .pagination {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      margin-top:16px;
+    }
+    .page-btn{
+      padding:10px 16px;
+      border:1px solid #d9dde3;
+      background:#fff;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:800;
+      height:40px;
+    }
+    .page-btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+    #pageInfo{
+      font-size:13px;
+      font-weight:800;
+    }
   </style>
 </head>
 
 <body>
 
   <nav class="navbar">
-    <a href="dbtest.jsp" class="navbar-brand">💧 SMART WATER JP</a>
+    <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
 
     <ul class="nav-links">
       <li><a href="customer_list.jsp">顧客一覧</a></li>
@@ -164,14 +190,13 @@
         <div class="search-group">
           <label>管轄区域</label>
           <select id="districtSelect">
-			  <option value="ALL">全ての区域</option>
-			  <option value="東京都渋谷区">東京都 渋谷区</option>
-			  <option value="東京都台東区">東京都 台東区</option>
-			  <option value="東京都中央区">東京都 中央区</option>
-			  <option value="東京都港区">東京都 港区</option>
-			  <option value="東京都新宿区">東京都 新宿区</option>
-		  </select>
-
+            <option value="ALL">全ての区域</option>
+            <option value="東京都渋谷区">東京都 渋谷区</option>
+            <option value="東京都台東区">東京都 台東区</option>
+            <option value="東京都中央区">東京都 中央区</option>
+            <option value="東京都港区">東京都 港区</option>
+            <option value="東京都新宿区">東京都 新宿区</option>
+          </select>
         </div>
 
         <div class="search-group">
@@ -189,24 +214,31 @@
         <thead>
           <tr>
             <th>氏名</th>
-			<th>管轄区域</th>
-			<th>詳細住所</th>
-
+            <th>管轄区域</th>
+            <th>詳細住所</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
 
       <div class="no-result" id="noResult">検索結果がありません。</div>
+
+      <!-- ✅ pagination UI -->
+      <div class="pagination" id="pagination" style="display:none;">
+        <button type="button" class="page-btn" id="btnPrev">前へ</button>
+        <span id="pageInfo">1 / 1 ページ</span>
+        <button type="button" class="page-btn" id="btnNext">次へ</button>
+      </div>
+
     </div>
   </div>
 
   <script>
-    // ✅ DB에서 읽어온 데이터를 여기 rows 배열에 주입
+    // ✅ DB에서 읽어온 데이터를 rows 배열에 주입
     const rows = [
       <%= rowsJs.toString() %>
     ];
-    console.log("rows length =", rows.length); // ✅ 이거 추가
+    console.log("rows length =", rows.length);
 
     const districtSelect = document.getElementById("districtSelect");
     const nameInput = document.getElementById("nameInput");
@@ -214,42 +246,64 @@
     const resultCount = document.getElementById("resultCount");
     const noResult = document.getElementById("noResult");
     const dataTable = document.getElementById("dataTable");
+    const pagination = document.getElementById("pagination");
+    const btnPrev = document.getElementById("btnPrev");
+    const btnNext = document.getElementById("btnNext");
+    const pageInfo = document.getElementById("pageInfo");
+
+    const PAGE_SIZE = 20;
+    let currentPage = 1;
+    let filteredRows = rows;
 
     function renderTable(data) {
       tbody.innerHTML = "";
-      resultCount.textContent = "検索結果は" + data.length + "件です。";
 
-      if (data.length === 0) {
+      const total = data.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      resultCount.textContent = "検索結果は" + total + "件です。";
+
+      if (total === 0) {
         dataTable.style.display = "none";
         noResult.style.display = "block";
+        pagination.style.display = "none";
         return;
       }
 
       dataTable.style.display = "table";
       noResult.style.display = "none";
+      pagination.style.display = "flex";
 
-      data.forEach(r => {
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = data.slice(start, start + PAGE_SIZE);
+
+      pageItems.forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML =
-        	  "<td>" + r.name + "</td>" +
-        	  "<td>" + r.district + "</td>" +
-        	  "<td class='addr'>" + r.address + "</td>";
-        	
+          "<td>" + r.name + "</td>" +
+          "<td>" + r.district + "</td>" +
+          "<td class='addr'>" + r.address + "</td>";
         tbody.appendChild(tr);
       });
+
+      pageInfo.textContent = currentPage + " / " + totalPages + " ページ";
+      btnPrev.disabled = (currentPage === 1);
+      btnNext.disabled = (currentPage === totalPages);
     }
 
     function applyFilter() {
       const d = districtSelect.value;
       const q = nameInput.value.trim().toLowerCase();
 
-      const filtered = rows.filter(r => {
+      filteredRows = rows.filter(r => {
         const okDistrict = (d === "ALL") || (r.district === d);
         const okName = (!q) || (r.name.toLowerCase().includes(q));
         return okDistrict && okName;
       });
 
-      renderTable(filtered);
+      currentPage = 1;
+      renderTable(filteredRows);
     }
 
     document.getElementById("btnSearch").addEventListener("click", applyFilter);
@@ -257,10 +311,29 @@
     document.getElementById("btnReset").addEventListener("click", () => {
       districtSelect.value = "ALL";
       nameInput.value = "";
-      renderTable(rows);
+      filteredRows = rows;
+      currentPage = 1;
+      renderTable(filteredRows);
     });
 
-    renderTable(rows);
+    btnPrev.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable(filteredRows);
+      }
+    });
+
+    btnNext.addEventListener("click", () => {
+      const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTable(filteredRows);
+      }
+    });
+
+    // 초기 렌더
+    filteredRows = rows;
+    renderTable(filteredRows);
   </script>
 
 </body>
