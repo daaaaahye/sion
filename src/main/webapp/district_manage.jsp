@@ -150,7 +150,7 @@
 <body>
 
   <nav class="navbar">
-    <a href="dbtest.jsp" class="navbar-brand">💧 SMART WATER JP</a>
+    <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
 
     <ul class="nav-links">
       <li><a href="customer_list.jsp">顧客一覧</a></li>

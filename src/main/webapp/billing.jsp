@@ -10,16 +10,18 @@
     if (adminName == null) adminName = "관리자";
     if (customerId == null) customerId = "B02201"; 
 
-    Connection conn = null;
+    Connection connRoot = null; // 관리자용(root) 추가
+    Connection connWsms = null; // 데이터용(wsms) 추가
     DecimalFormat df = new DecimalFormat("#,###");
     
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
+        connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
         
-        // 관리자 성함 최신화
-        String sqlAdmin = "SELECT name FROM admins WHERE emp_id = ?";
-        PreparedStatement pstmtAdmin = conn.prepareStatement(sqlAdmin);
+     // 테이블명 "Administrator", 컬럼명 id로 변경하고 connRoot 사용
+        String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?"; 
+        PreparedStatement pstmtAdmin = connRoot.prepareStatement(sqlAdmin);
         pstmtAdmin.setString(1, sessionAdminId);
         ResultSet rsAdmin = pstmtAdmin.executeQuery();
         if(rsAdmin.next()) { 
@@ -33,7 +35,9 @@
                      " (SELECT COALESCE(SUM(paid_amount), 0) FROM public.deposit WHERE customer_id = ?) as total_paid " +
                      "FROM public.customers c WHERE c.customer_id = ?";
                      
-        PreparedStatement pstmt = conn.prepareStatement(sql);
+
+     // conn이 아닌 connWsms 사용
+        PreparedStatement pstmt = connWsms.prepareStatement(sql);
         pstmt.setString(1, customerId);
         pstmt.setString(2, customerId);
         pstmt.setString(3, customerId);
@@ -197,5 +201,8 @@
 </html>
 <% 
     } catch(Exception e) { e.printStackTrace(); } 
-    finally { if(conn != null) conn.close(); } 
+    finally { 
+        if(connRoot != null) connRoot.close(); 
+        if(connWsms != null) connWsms.close(); 
+    }
 %>
