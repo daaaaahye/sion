@@ -108,7 +108,7 @@
             <li><a href="district_manage.jsp">管轄区域管理</a></li>
             <li><a href="overdue_list.jsp">滞納管理</a></li>
             <li><a href="#">入金管理</a></li>
-            <li><a href="#">請求管理</a></li>
+            <li><a href="billing_list">請求管理</a></li>
         </ul>
         <div class="admin-area">
             <div class="admin-text">
