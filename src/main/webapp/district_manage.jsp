@@ -92,7 +92,7 @@
 
     .main-container { max-width:1200px; margin:26px auto; padding:0 20px; }
     .content-card { background:#fff; border-radius:12px; padding:24px; box-shadow:0 4px 12px rgba(0,0,0,0.05); }
-    .section-title { font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:12px; border-left:5px solid #2aa3ff; padding-left:10px; }
+    .section-title { font-size:24px; font-weight:bold; color:#2c3e50; margin-bottom:12px; border-left:5px solid #2aa3ff; padding-left:10px; }
 
     .search-notice { margin:10px 0 14px; padding:12px 14px; border-radius:10px; background:#f1f6fb; border:1px solid #dbe9f6; font-size:13px; line-height:1.55; }
 
