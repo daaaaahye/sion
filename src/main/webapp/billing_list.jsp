@@ -1,6 +1,7 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" 
-isELIgnored="true" import="java.text.NumberFormat" %>
-<%@ include file="db/db.jsp" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*" %>
+<%@ page import="java.text.*" %>
+<%@ page import="java.util.*" %>
 <%
 PreparedStatement pstmt = null;
 PreparedStatement pstmtDate = null;
@@ -14,7 +15,45 @@ String id = request.getParameter("customer_id");
 String amount = request.getParameter("bill_amount");
 String billingDate = request.getParameter("billing_date");
 %>
+<%
+    // 1. 세션 체크: 관리자 로그인 상태 확인
+    String sessionAdminId = (String) session.getAttribute("adminId");
+    if (sessionAdminId == null) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
 
+    String adminName = (String) session.getAttribute("adminName"); 
+    if (adminName == null) adminName = "管理者";
+
+    request.setCharacterEncoding("UTF-8");
+    String searchName = request.getParameter("searchName");
+    if (searchName == null) searchName = "";
+
+    Connection connRoot = null; 
+    Connection connWsms = null; 
+    
+    DecimalFormat df = new DecimalFormat("¥###,###");
+    Random rnd = new Random(); 
+
+    try {
+        // 드라이버 로딩
+        Class.forName("org.postgresql.Driver");
+        
+        // 2. DB 연결 설정 (호스트, 계정, 비밀번호 확인 필요)
+        connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
+        connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        // 관리자 이름 동기화
+        String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";
+        PreparedStatement pstmtAdmin = connRoot.prepareStatement(sqlAdmin);
+        pstmtAdmin.setString(1, sessionAdminId);
+        ResultSet rsAdmin = pstmtAdmin.executeQuery();
+        
+        if(rsAdmin.next()) { 
+            adminName = rsAdmin.getString("name"); 
+            session.setAttribute("adminName", adminName); 
+        }
+%>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -29,25 +68,22 @@ String billingDate = request.getParameter("billing_date");
     	<a href="main.jsp" class="navbar-brand">💧 SMART WATER</a>
 	    <ul class="nav-links" id="navLinks">
 	    	<li><a href="customer_list.jsp">고객 리스트</a></li>
-	        <li><a href="district.jsp">관할 구역 관리</a></li>
-	        <li><a href="overdue.jsp">연체 관리</a></li>
+	        <li><a href="district_manage.jsp">관할 구역 관리</a></li>
+	        <li><a href="overdue_list.jsp">연체 관리</a></li>
 	        <li><a href="#">입금 관리</a></li>
             <li><a href="#" class="active">청구 관리 </a></li>
             <li class="nav-indicator" id="navIndicator"></li>
 	    </ul>
-	
-	  <div class="admin-area">
-	    <div class="admin-text">
-	        <div class="admin-name">김 아무개 님</div>
-	        <div class="admin-id">사번 2401309</div>
-	    </div>
-	    <div class="admin-icon">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Z" stroke="#111827" stroke-width="1.6"/>
-                <path d="M3 23c0-4.2 4-7.6 9-7.6s9 3.4 9 7.6" stroke="#111827" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
-	    </div>
-	  </div>
+		<div class="admin-area">
+            <div class="admin-text">
+                <div class="admin-name"><%= adminName %> 様</div>
+                <div class="admin-id">社員番号 <%= sessionAdminId %></div>
+            </div>
+            <div class="admin-icon">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Z" stroke="#111827" stroke-width="1.6"/><path d="M3 23c0-4.2 4-7.6 9-7.6s9 3.4 9 7.6" stroke="#111827" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <a href="logout.jsp" class="btn-logout">ログアウト</a>
+        </div>
 	</nav>
 	<form class="search-box" method="get">
 	<div class="search-group">
@@ -65,12 +101,12 @@ if (name != null && !name.trim().isEmpty()) {
         "JOIN customers c ON b.customer_id = c.customer_id " +
         "WHERE c.name LIKE ? " +
         "ORDER BY b.billing_date";
-    pstmtDate = conn.prepareStatement(dateSql);
+    pstmtDate = connWsms.prepareStatement(dateSql);
     pstmtDate.setString(1, "%" + name + "%");
 } else {
     dateSql =
         "SELECT DISTINCT billing_date FROM bill ORDER BY billing_date";
-    pstmtDate = conn.prepareStatement(dateSql);
+    pstmtDate = connWsms.prepareStatement(dateSql);
 }
 
 rsDate = pstmtDate.executeQuery();
@@ -108,7 +144,7 @@ if (name != null && !name.trim().isEmpty()) {
 sql +=" WHERE c.name LIKE ? ";
 }
 sql+=" ORDER BY c.customer_id";
-pstmt = conn.prepareStatement(sql);
+pstmt = connWsms.prepareStatement(sql);
 if (name != null && !name.trim().isEmpty()) {
 pstmt.setString(1, "%" + name + "%");
 }
@@ -147,7 +183,7 @@ int billAmount = 0;
 if(billingDate != null && !billingDate.isEmpty()){
 	String dataSql =
 			"SELECT bill_amount FROM bill WHERE customer_id=? AND billing_date=?";
-	pstmtData=conn.prepareStatement(dataSql);
+	pstmtData=connWsms.prepareStatement(dataSql);
 	pstmtData.setString(1,rs.getString("customer_id"));
 	pstmtData.setDate(2,java.sql.Date.valueOf(billingDate));
 	
@@ -164,9 +200,7 @@ String formattedAmount = nf.format(billAmount);
 ¥ <%= formattedAmount %>
 </td>
 <!-- <td></td> -->
-<td><button class="btn-view" type="button" 
-    onclick="location.href='billing.jsp?customer_id=<%= rs.getString("customer_id") %>&billing_date=<%= (billingDate != null && rs.getString("customer_id").equals(id)) ? billingDate : rs.getDate("billing_date") %>'" 
-    class="active">고지서 조회</button></td>
+<td><button class="btn-view" type="button" onclick="location.href='billing.jsp'">고지서 조회</button></td>
 </tr>
 <% 
 }
@@ -201,10 +235,14 @@ const nav = document.getElementById('navLinks');
      indicator.style.opacity = '0';
    });
 </script>
-<%
-if (rs != null) rs.close();
-if (pstmt != null) pstmt.close();
-if (conn != null) conn.close();
-%>
 </body>
 </html>
+<%
+    } catch (Exception e) {
+        out.println("에러 발생: " + e.getMessage());
+    } finally { 
+        if (rs != null) try { rs.close(); } catch(Exception e) {}
+        if (pstmt != null) try { pstmt.close(); } catch(Exception e) {}
+        if (connWsms != null) try { connWsms.close(); } catch(Exception e) {}
+    }
+%>
