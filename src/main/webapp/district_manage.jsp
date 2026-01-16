@@ -128,6 +128,7 @@
     }
     .data-table td{
       padding:12px;
+      font-size: 14px;
       border-bottom:1px solid #eee;
       text-align:left;
       overflow:hidden;
