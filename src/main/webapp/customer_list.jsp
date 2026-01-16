@@ -10,7 +10,7 @@
     }
 
     String adminName = (String) session.getAttribute("adminName"); 
-    if (adminName == null) adminName = "管理者"; 
+    if (adminName == null) adminName = "管理者"; // 관리자 -> 管理者
 
     request.setCharacterEncoding("UTF-8");
     String searchName = request.getParameter("searchName");
@@ -39,8 +39,7 @@
         }
 %>
 <!DOCTYPE html>
-<html lang="ja">
-<head>
+<html lang="ja"> <head>
     <meta charset="UTF-8">
     <title>顧客管理 - SMART WATER</title>
     <style>
@@ -76,34 +75,25 @@
     <nav class="navbar">
         <a href="main.jsp" class="navbar-brand">💧 SMART WATER</a>
         <ul class="nav-links">
-            <li><a href="customer_list.jsp" class="active">顧客リスト</a></li>
-            <li><a href="district_manage.jsp">管轄区域管理</a></li>
-            <li><a href="overdue_list.jsp">延滞管理</a></li>
-            <li><a href="#">入金管理</a></li>
-            <li><a href="#">請求管理</a></li>
-        </ul>
+            <li><a href="customer_list.jsp" class="active">顧客リスト</a></li> <li><a href="district_manage.jsp">管轄区域管理</a></li> <li><a href="overdue_list.jsp">滞納管理</a></li> <li><a href="#">入金管理</a></li> <li><a href="#">請求管理</a></li> </ul>
         <div class="admin-area">
             <div class="admin-text">
-                <div class="admin-name"><%= adminName %> 様</div>
-                <div class="admin-id">社員番号 <%= sessionAdminId %></div>
-            </div>
+                <div class="admin-name"><%= adminName %> 様</div> <div class="admin-id">社員番号 <%= sessionAdminId %></div> </div>
             <div class="admin-icon">
                 <svg viewBox="0 0 24 24" fill="none"><path d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Z" stroke="#111827" stroke-width="1.6"/><path d="M3 23c0-4.2 4-7.6 9-7.6s9 3.4 9 7.6" stroke="#111827" stroke-width="1.6" stroke-linecap="round"/></svg>
             </div>
-            <a href="logout.jsp" class="btn-logout">ログアウト</a>
-        </div>
+            <a href="logout.jsp" class="btn-logout">ログアウト</a> </div>
     </nav>
 
     <div class="main-container">
         <div class="content-card">
-            <h2>👥 顧客管理リスト</h2>
-            <form class="search-box" action="customer_list.jsp" method="get">
-                <input type="text" name="searchName" value="<%= searchName %>" placeholder="顧客名を入力してください">
-                <button type="submit" class="btn-search">検索</button>
-                <a href="customer_list.jsp" class="btn-reset">リセット</a>
-            </form>
+            <h2>👥 顧客管理リスト</h2> <form class="search-box" action="customer_list.jsp" method="get">
+                <input type="text" name="searchName" value="<%= searchName %>" placeholder="顧客名を入力してください"> <button type="submit" class="btn-search">検索</button> <a href="customer_list.jsp" class="btn-reset">リセット</a> </form>
             <table class="list-table">
-                <thead><tr><th>お名前</th><th>ご住所</th><th>今月の使用量</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>お名前</th> <th>ご住所</th> <th>今月の使用量</th> </tr>
+                </thead>
                 <tbody>
                 <%
                     String sqlCust = "SELECT customer_id, name, address FROM customers";
@@ -117,8 +107,7 @@
                     while(rs.next()) {
                 %>
                     <tr>
-                        <td><a href="customer_detail.jsp?customer_id=<%= rs.getString("customer_id") %>" class="name-link"><%= rs.getString("name") %> 様</a></td>
-                        <td><%= rs.getString("address") %></td>
+                        <td><a href="customer_detail.jsp?customer_id=<%= rs.getString("customer_id") %>" class="name-link"><%= rs.getString("name") %> 様</a></td> <td><%= rs.getString("address") %></td>
                         <td><span class="usage-badge"><%= rnd.nextInt(141) + 10 %> m³</span></td>
                     </tr>
                 <% } %>
@@ -130,7 +119,7 @@
 </html>
 <%
     } catch (Exception e) { 
-        out.println("<div style='color:red; padding:20px;'>Error: " + e.getMessage() + "</div>"); 
+        out.println("<div style='color:red; padding:20px;'>エラー: " + e.getMessage() + "</div>"); // Error -> エラー
     } finally { 
         if(connRoot != null) try { connRoot.close(); } catch(SQLException e) {}
         if(connWsms != null) try { connWsms.close(); } catch(SQLException e) {}
