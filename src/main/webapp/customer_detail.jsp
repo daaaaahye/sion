@@ -17,8 +17,8 @@
         return;
     }
 
-    Connection connRoot = null; // root DB용 (Administrator)
-    Connection connWsms = null; // wsms DB용 (customers)
+    Connection connRoot = null; // root DB용 (Administrator 테이블)
+    Connection connWsms = null; // wsms DB용 (customers, bill 테이블)
     PreparedStatement pstmt = null;
     ResultSet rs = null;
     DecimalFormat df = new DecimalFormat("#,###");
@@ -26,13 +26,13 @@
     String name = "";
     String phone = ""; 
     String address = "";
-    int unpaidAmount = 0;   // 실제 연체 로직 구현 필요 시 쿼리 추가
-    int overdueMonths = 0;  // 실제 연체 로직 구현 필요 시 쿼리 추가
+    long unpaidAmount = 0;   
+    int overdueMonths = 0;  
 
     try {
         Class.forName("org.postgresql.Driver");
         
-        // 2. 이중 DB 연결
+        // 2. 이중 DB 연결 설정
         connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
         connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
 
@@ -45,10 +45,19 @@
             sessionAdminName = rs.getString("name"); 
             session.setAttribute("adminName", sessionAdminName); 
         }
-        rs.close(); pstmt.close();
+        rs.close(); 
+        pstmt.close();
 
-        // 4. 고객 정보 조회 (wsms DB 사용)
-        String sql = "SELECT name, tel, address FROM public.customers WHERE customer_id = ?";
+        // 4. 고객 정보 및 미납금 계산 (wsms DB 사용)
+        // [수정된 로직 반영] JOIN을 통해 미납금과 연체 개월수를 한 번에 계산
+        String sql = "SELECT c.name, c.tel, c.address, " +
+                     "       COALESCE(SUM(b.bill_amount), 0) as total_unpaid, " +
+                     "       COUNT(b.customer_id) as total_months " +
+                     "FROM public.customers c " +
+                     "LEFT JOIN public.bill b ON c.customer_id = b.customer_id " +
+                     "WHERE c.customer_id = ? " +
+                     "GROUP BY c.name, c.tel, c.address";
+        
         pstmt = connWsms.prepareStatement(sql);
         pstmt.setString(1, customerId); 
         rs = pstmt.executeQuery();
@@ -57,6 +66,8 @@
             name = rs.getString("name");
             phone = rs.getString("tel");
             address = rs.getString("address");
+            unpaidAmount = rs.getLong("total_unpaid");
+            overdueMonths = rs.getInt("total_months");
         } else {
             out.println("<script>alert('該当する顧客が見つかりません。'); location.href='customer_list.jsp';</script>");
             return;
@@ -64,7 +75,9 @@
 
     } catch (Exception e) {
         e.printStackTrace();
+        out.println("에러 발생: " + e.getMessage());
     } finally {
+        // 5. 자원 해제 (연결이 두 개이므로 모두 닫아줌)
         if (rs != null) try { rs.close(); } catch(Exception e) {}
         if (pstmt != null) try { pstmt.close(); } catch(Exception e) {}
         if (connRoot != null) try { connRoot.close(); } catch(Exception e) {}
