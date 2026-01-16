@@ -113,9 +113,34 @@
 
     .result-count { margin:10px 0; font-size:13px; font-weight:bold; }
 
-    .data-table { width:100%; border-collapse:collapse; margin-top:10px; table-layout: fixed;  }
-    .data-table th, .data-table td { padding:14px; border-bottom:1px solid #eee; text-align:center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .data-table td.addr { text-align:center; }
+    /* =========================
+       ✅ [변경] 테이블 디자인 (customer_list.jsp 느낌)
+       ========================= */
+    .data-table { width:100%; border-collapse:collapse; margin-top:20px; table-layout: fixed; }
+
+    .data-table th{
+      background:#f8f9fa;              /* 헤더 배경 회색 */
+      padding:12px;
+      text-align:left;
+      border-bottom:2px solid #dee2e6; /* 아래선 굵게 */
+      color:#495057;
+      font-size:16px;                 /* 헤더 2px 정도 키움(원하면 15/16 조절) */
+    }
+    .data-table td{
+      padding:12px;
+      border-bottom:1px solid #eee;
+      text-align:left;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    /* 이름 파란색 */
+    .name-link{
+      color:#3498db;
+      text-decoration:none;
+      font-weight:bold;
+    }
+    /* ========================= */
 
     .no-result { padding:18px; text-align:center; color:#666; border:1px dashed #ccc; border-radius:10px; margin-top:10px; display:none; }
 
@@ -281,9 +306,9 @@
       pageItems.forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML =
-          "<td>" + r.name + "</td>" +
+          "<td><a href='#' class='name-link'>" + r.name + "</a></td>" +   // ✅ [변경] 이름 파란색
           "<td>" + r.district + "</td>" +
-          "<td class='addr'>" + r.address + "</td>";
+          "<td>" + r.address + "</td>";
         tbody.appendChild(tr);
       });
 
