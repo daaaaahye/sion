@@ -99,18 +99,16 @@
 <body>
     <nav class="navbar">
         <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
-        <ul class="nav-links">
-            <li><a href="main.jsp" class="active">ホーム</a></li>
-            <li><a href="customer_list.jsp">顧客リスト</a></li>
-            <li><a href="overdue_list.jsp">滞納管理</a></li>
-            <li><a href="district_manage.jsp">管轄区域管理</a></li>
-        </ul>
+        <ul class="nav-links" id="navLinks">
+      		<li><a href="customer_list.jsp">顧客一覧</a></li>
+      		<li><a href="district_manage.jsp">管轄区域管理</a></li>
+      		<li><a href="overdue_list.jsp">延滞管理</a></li>
+      		<li><a href="deposit.jsp">入金管理</a></li>
+      		<li><a href="billing.jsp">請求管理</a></li>
+      		<span class="nav-indicator" id="navIndicator"></span>
+    	</ul>
     </nav>
 
-    <div class="admin-mini-bar">
-        <span>ログイン管理者: <b><%= (sessionAdminName != null ? sessionAdminName : "管理者") %></b> 様 (社員番号: <%= sessionAdminId %>)</span>
-        <a href="logout.jsp" class="btn-logout">ログアウト</a>
-    </div>
 
     <div class="main-container">
         <div class="image-banner">
