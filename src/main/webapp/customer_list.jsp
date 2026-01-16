@@ -24,14 +24,11 @@
     Random rnd = new Random(); 
 
     try {
-        // 드라이버 로딩
         Class.forName("org.postgresql.Driver");
         
-        // 2. DB 연결 설정 (호스트, 계정, 비밀번호 확인 필요)
         connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
         connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
 
-        // 관리자 이름 동기화
         String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";
         PreparedStatement pstmtAdmin = connRoot.prepareStatement(sqlAdmin);
         pstmtAdmin.setString(1, sessionAdminId);
@@ -51,7 +48,7 @@
         * { box-sizing: border-box; }
         body { font-family: "Meiryo", "Malgun Gothic", sans-serif; margin: 0; background-color: #f8f9fa; }
         
-        /* 네비바 설정: padding 0 22px 반영 */
+        /* 네비바 설정 */
         .navbar { background-color: #2c3e50; color: white; height: 60px; display: flex; align-items: center; padding: 0 22px; }
         .navbar-brand { font-size: 18px; font-weight: bold; color: #3498db; text-decoration: none; margin-right: 40px; }
         .nav-links { list-style: none; display: flex; gap: 20px; margin: 0; padding: 0; }
@@ -66,10 +63,9 @@
         .admin-icon svg { width: 20px; height: 20px; }
         .btn-logout { color: #e74c3c; text-decoration: none; font-size: 12px; margin-left: 15px; border: 1px solid #e74c3c; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
         
-        /* 메인 컨테이너 여백: 좌우 체감 45px (main 20px + card 25px(이후 24px로 조정)) */
+        /* 메인 컨테이너 */
         .main-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
 
-        /* [핵심 수정] 카드 패딩 24px 설정: 타이틀 상단 및 좌측 여백 일치 */
         .content-card { 
             background: white; 
             border-radius: 10px; 
@@ -77,13 +73,16 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
         }
         
-        /* 메인 타이틀: 폰트 크기 24px, 상단 마진 제거 */
+        /* 타이틀 스타일: 글자 크기를 다시 24px로 키우고 파란 선 유지 */
         .content-card h2 { 
-            font-size: 24px; 
+            font-size: 24px; /* 원래 크기로 복구 */
             margin-top: 0; 
             margin-bottom: 24px; 
             color: #2c3e50; 
-            line-height: 1; 
+            line-height: 1.1;
+            border-left: 5px solid #2aa3ff; 
+            padding-left: 12px; 
+            font-weight: bold;
         }
 
         /* 검색 영역 */
@@ -92,9 +91,16 @@
         .btn-search { background: #3498db; color: white; border: none; height: 40px; padding: 0 20px; border-radius: 7px; cursor: pointer; font-weight: bold; }
         .btn-reset { background: #eee; padding: 0 20px; border-radius: 7px; border: 1px solid #ddd; height: 40px; cursor: pointer; color: #333; text-decoration: none; line-height: 40px; font-size: 14px; }
         
-        /* 리스트 테이블: 헤더 14px */
+        /* 리스트 테이블 */
         .list-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .list-table th { background: #f8f9fa; padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057; font-size: 14px; }
+        .list-table th { 
+            background: #f8f9fa; 
+            padding: 14px 12px; 
+            text-align: left; 
+            border-bottom: 2px solid #dee2e6; 
+            color: #495057; 
+            font-size: 16px; 
+        }
         .list-table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
         .name-link { color: #3498db; text-decoration: none; font-weight: bold; }
         .usage-badge { background: #e8f4fd; color: #2980b9; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
@@ -107,8 +113,8 @@
             <li><a href="customer_list.jsp" class="active">顧客リスト</a></li>
             <li><a href="district_manage.jsp">管轄区域管理</a></li>
             <li><a href="overdue_list.jsp">滞納管理</a></li>
-            <li><a href="#">入金管理</a></li>
-            <li><a href="#">請求管理</a></li>
+            <li><a href="deposit_list.jsp">入金管理</a></li>
+            <li><a href="bill_list.jsp">請求管理</a></li>
         </ul>
         <div class="admin-area">
             <div class="admin-text">
@@ -129,7 +135,7 @@
             <form class="search-box" action="customer_list.jsp" method="get">
                 <input type="text" name="searchName" value="<%= searchName %>" placeholder="顧客名を入力してください"> 
                 <button type="submit" class="btn-search">検索</button> 
-                <a href="customer_list.jsp" class="btn-reset">リセット</a> 
+                <a href="customer_list.jsp" class="btn-reset">리셋</a> 
             </form>
 
             <table class="list-table">
@@ -170,7 +176,6 @@
 </html>
 <%
     } catch (Exception e) { 
-        // 화면이 안 뜰 때 에러 원인을 파악하기 위한 출력 로직
         out.println("<div style='color:red; background:#fff; padding:20px; border:2px solid red; margin:20px;'>");
         out.println("<h3>에러 발생 상세:</h3>");
         out.println("<p>" + e.getMessage() + "</p>");
