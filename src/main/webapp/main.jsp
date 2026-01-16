@@ -183,10 +183,9 @@
 <%
     } catch (Exception e) {
         out.println("에러 발생: " + e.getMessage());
-    } finally {
+    } finally { 
         if (rs != null) try { rs.close(); } catch(Exception e) {}
         if (pstmt != null) try { pstmt.close(); } catch(Exception e) {}
         if (connWsms != null) try { connWsms.close(); } catch(Exception e) {}
     }
 %>
-
