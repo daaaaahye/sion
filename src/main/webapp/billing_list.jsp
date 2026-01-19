@@ -2,7 +2,6 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="java.text.*" %>
 <%@ page import="java.util.*" %>
-
 <%
 PreparedStatement pstmt = null;
 PreparedStatement pstmtDate = null;
@@ -30,14 +29,9 @@ String billingDate = request.getParameter("billing_date");
     if (adminName == null) adminName = "管理者";
 
     request.setCharacterEncoding("UTF-8");
-    String searchName = request.getParameter("searchName");
-    if (searchName == null) searchName = "";
 
     Connection connRoot = null;
     Connection connWsms = null;
-
-    DecimalFormat df = new DecimalFormat("¥###,###");
-    Random rnd = new Random();
 
     try {
         Class.forName("org.postgresql.Driver");
@@ -45,13 +39,12 @@ String billingDate = request.getParameter("billing_date");
         connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
         connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
 
-        // 관리자 이름 동기화
         String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";
         PreparedStatement pstmtAdmin = connRoot.prepareStatement(sqlAdmin);
         pstmtAdmin.setString(1, sessionAdminId);
         ResultSet rsAdmin = pstmtAdmin.executeQuery();
 
-        if (rsAdmin.next()) {
+        if(rsAdmin.next()) {
             adminName = rsAdmin.getString("name");
             session.setAttribute("adminName", adminName);
         }
@@ -62,172 +55,13 @@ String billingDate = request.getParameter("billing_date");
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>請求管理 - SMART WATER</title>
-  <link rel="stylesheet" href="css/billing_list.css" >
-
-  <!-- ✅ 통합 메뉴바 스타일 추가 -->
-  <style>
-    /* ===============================
-       ✅ TOP NAVBAR (통합 버전)
-       =============================== */
-    .navbar {
-      height: 56px;
-      background: #243646;
-      display: flex;
-      align-items: center;
-      padding: 0 22px;
-      gap: 26px;
-      position: relative;
-    }
-
-    .navbar-brand {
-      font-weight: 800;
-      font-size: 16px;
-      color: #2aa3ff;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-
-    .nav-links {
-      list-style: none;
-      display: flex;
-      align-items: center;
-      gap: 22px;
-      margin: 0;
-      padding: 0;
-      position: relative;
-    }
-
-    .nav-links a {
-      color: #cbd5e1;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 18px 4px 14px;
-      white-space: nowrap;
-      display: inline-block;
-      position: relative;
-    }
-
-    .nav-links a:hover { color: #ffffff; }
-
-    /* ✅ 메뉴바 5번째 메뉴(請求管理) 아래 언더라인 고정 */
-    .nav-links li:nth-child(5) a::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: 6px;
-      width: 100%;
-      height: 2px;
-      background: #2aa3ff;
-      border-radius: 2px;
-    }
-
-    /* ADMIN */
-    .admin-area{
-      margin-left: auto;
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .admin-text{
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      line-height: 1.2;
-      margin: 0;
-      transform: none;
-      white-space: nowrap;
-    }
-
-    .admin-name {
-      font-size: 12px;
-      font-weight: 700;
-      color: #e5edf5;
-    }
-
-    .admin-id {
-      font-size: 11px;
-      color: #9fb0c3;
-    }
-
-    .admin-icon {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.92);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 0 2px rgba(255,255,255,.28);
-      user-select: none;
-      cursor: pointer;
-    }
-
-    .admin-icon svg { width: 18px; height: 18px; opacity: .85; }
-
-    .admin-dropdown {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      margin-top: 6px;
-      min-width: 120px;
-      background: rgba(255,255,255,.72);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(229,231,235,.9);
-      border-radius: 12px;
-      box-shadow: 0 16px 36px rgba(0,0,0,.18);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transform: translateY(6px);
-      transition: opacity .16s ease, transform .16s ease, visibility .16s;
-    }
-
-    .admin-dropdown.open{
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-
-    .dropdown-item {
-      padding: 9px 12px;
-      font-size: 13px;
-      color: #111827;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-
-    .dropdown-item:hover { background: rgba(17,24,39,.06); }
-
-    .dropdown-sep { height: 1px; background: rgba(17,24,39,.08); margin: 2px 0; }
-
-    .dropdown-item.logout {
-      color: #b91c1c;
-      font-weight: 800;
-    }
-
-    /* hover로도 열리게 */
-    .admin-area:hover .admin-dropdown{
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-  </style>
+  <title>월별 청구 내역 - SMART WATER</title>
+  <link rel="stylesheet" href="css/billing_list.css">
 </head>
 
 <body>
 
-  <!-- ✅ 메뉴바: 통합 버전 적용 -->
+  <!-- ✅ 통합 메뉴바 (5번째 메뉴 언더라인은 CSS에서 nth-child(5)로 고정) -->
   <nav class="navbar">
     <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
 
@@ -327,6 +161,7 @@ String billingDate = request.getParameter("billing_date");
             <label>日付を選択してください</label>
             <select name="billing_date" onchange="this.form.submit()">
               <option value="">日付を選択してください</option>
+
               <%
                 String dateSql;
 
@@ -349,13 +184,11 @@ String billingDate = request.getParameter("billing_date");
                 while (rsDate.next()) {
                     String d = rsDate.getDate("billing_date").toString();
               %>
-              <option value="<%= d %>" <%= d.equals(billingDate) ? "selected" : "" %>>
-                <%= d %>
-              </option>
+              <option value="<%= d %>" <%= (billingDate != null && d.equals(billingDate)) ? "selected" : "" %>><%= d %></option>
               <%
                 }
-                rsDate.close();
-                pstmtDate.close();
+                if (rsDate != null) try { rsDate.close(); } catch(Exception e) {}
+                if (pstmtDate != null) try { pstmtDate.close(); } catch(Exception e) {}
               %>
             </select>
           </div>
@@ -376,37 +209,30 @@ String billingDate = request.getParameter("billing_date");
           <tbody>
             <%
               while (rs.next()) {
+                int billAmount = 0;
+
+                if (billingDate != null && !billingDate.isEmpty()) {
+                    String dataSql = "SELECT bill_amount FROM bill WHERE customer_id=? AND billing_date=?";
+                    pstmtData = connWsms.prepareStatement(dataSql);
+                    pstmtData.setString(1, rs.getString("customer_id"));
+                    pstmtData.setDate(2, java.sql.Date.valueOf(billingDate));
+
+                    rsData = pstmtData.executeQuery();
+                    if (rsData.next()) billAmount = rsData.getInt("bill_amount");
+
+                    if (rsData != null) try { rsData.close(); } catch(Exception e) {}
+                    if (pstmtData != null) try { pstmtData.close(); } catch(Exception e) {}
+                } else {
+                    billAmount = rs.getInt("bill_amount");
+                }
+
+                NumberFormat nf = NumberFormat.getInstance();
+                String formattedAmount = nf.format(billAmount);
             %>
             <tr>
               <td><%= rs.getString("customer_id") %></td>
               <td><%= rs.getString("name") %></td>
-              <td>
-                <%
-                  int billAmount = 0;
-
-                  if (billingDate != null && !billingDate.isEmpty()) {
-                      String dataSql =
-                          "SELECT bill_amount FROM bill WHERE customer_id=? AND billing_date=?";
-                      pstmtData = connWsms.prepareStatement(dataSql);
-                      pstmtData.setString(1, rs.getString("customer_id"));
-                      pstmtData.setDate(2, java.sql.Date.valueOf(billingDate));
-
-                      rsData = pstmtData.executeQuery();
-                      if (rsData.next()) {
-                          billAmount = rsData.getInt("bill_amount");
-                      }
-                      rsData.close();
-                      pstmtData.close();
-                  } else {
-                      // billingDate 없을 때는 현재 rs의 bill_amount 사용
-                      billAmount = rs.getInt("bill_amount");
-                  }
-
-                  NumberFormat nf = NumberFormat.getInstance();
-                  String formattedAmount = nf.format(billAmount);
-                %>
-                ¥ <%= formattedAmount %>
-              </td>
+              <td>¥ <%= formattedAmount %></td>
               <td>
                 <button class="btn-view" type="button"
                   onclick="location.href='billing.jsp?customer_id=<%= rs.getString("customer_id") %>&billing_date=<%= rs.getString("billing_date") %>'">
@@ -449,10 +275,6 @@ String billingDate = request.getParameter("billing_date");
     } catch (Exception e) {
         out.println("에러 발생: " + e.getMessage());
     } finally {
-        if (rsData != null) try { rsData.close(); } catch(Exception e) {}
-        if (pstmtData != null) try { pstmtData.close(); } catch(Exception e) {}
-        if (rsDate != null) try { rsDate.close(); } catch(Exception e) {}
-        if (pstmtDate != null) try { pstmtDate.close(); } catch(Exception e) {}
         if (rs != null) try { rs.close(); } catch(Exception e) {}
         if (pstmt != null) try { pstmt.close(); } catch(Exception e) {}
         if (connRoot != null) try { connRoot.close(); } catch(Exception e) {}
