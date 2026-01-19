@@ -517,7 +517,7 @@
       <li><a href="district_manage.jsp">管轄区域管理</a></li>
       <li><a href="overdue_list.jsp">延滞管理</a></li>
       <li><a href="deposit.jsp">入金管理</a></li>
-      <li><a href="billing.jsp">請求管理</a></li>
+      <li><a href="billing_list.jsp">請求管理</a></li>
     </ul>
 
     <div class="admin-area" id="adminArea">

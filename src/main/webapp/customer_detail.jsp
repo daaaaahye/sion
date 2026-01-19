@@ -124,7 +124,7 @@
             <li><a href="customer_list.jsp" class="active">顧客リスト</a></li>
             <li><a href="district_manage.jsp">管轄区域管理</a></li>
             <li><a href="overdue_list.jsp">滞納管理</a></li>
-            <li><a href="#">入金管理</a></li>
+            <li><a href="deposit.jsp">入金管理</a></li>
             <li><a href="billing_list">請求管理</a></li>
         </ul>
         

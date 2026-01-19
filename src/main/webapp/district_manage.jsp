@@ -69,27 +69,176 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>管轄区域管理 - 水道管理システム</title>
+  <title>管轄区域管理 - SMART WATER</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     * { box-sizing: border-box; }
-    body { font-family: "Meiryo","Hiragino Kaku Gothic ProN",sans-serif; margin:0; background:#f8f9fa; color:#333; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      background: #f5f6f8;
+      color: #111827;
+    }
 
-    .navbar { height:56px; background:#243646; display:flex; align-items:center; padding:0 22px; gap:26px; }
-    .navbar-brand { display:flex; align-items:center; gap:8px; font-weight:800; font-size:16px; color:#2aa3ff; text-decoration:none; white-space:nowrap; }
-    .nav-links { list-style:none; display:flex; align-items:center; gap:18px; margin:0; padding:0; }
-    .nav-links a { color:#cbd5e1; text-decoration:none; font-size:13px; font-weight:600; padding:18px 6px 14px; border-bottom:2px solid transparent; white-space:nowrap; }
-    .nav-links a:hover { color:#fff; }
-    .nav-links a.active { color:#fff; border-bottom-color:#2aa3ff; }
+    /* ===============================
+       ✅ TOP NAVBAR (통합 버전)
+       =============================== */
+    .navbar {
+      height: 56px;
+      background: #243646;
+      display: flex;
+      align-items: center;
+      padding: 0 22px;
+      gap: 26px;
+      position: relative;
+    }
 
-    .admin-area { margin-left:auto; display:flex; align-items:center; gap:10px; }
-    .admin-text { display:flex; flex-direction:column; align-items:flex-end; line-height:1.1; white-space:nowrap; }
-    .admin-name { font-size:12px; font-weight:700; color:#e5edf5; }
-    .admin-id { font-size:11px; color:#9fb0c3; }
-    .admin-icon { width:30px; height:30px; border-radius:50%; background:#fff; display:grid; place-items:center; box-shadow:0 0 0 2px rgba(255,255,255,.35); }
-    .admin-icon svg { width:18px; height:18px; opacity:.75; }
+    .navbar-brand {
+      font-weight: 800;
+      font-size: 16px;
+      color: #2aa3ff;
+      text-decoration: none;
+      white-space: nowrap;
+    }
 
+    .nav-links {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      margin: 0;
+      padding: 0;
+      position: relative;
+    }
+
+    .nav-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 18px 4px 14px;
+      white-space: nowrap;
+      display: inline-block;
+      position: relative;
+    }
+
+    .nav-links a:hover { color: #ffffff; }
+
+    /* ✅ 메뉴바 두 번째 메뉴(管轄区域管理) 아래 언더라인 고정 */
+    .nav-links li:nth-child(2) a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 6px;
+      width: 100%;
+      height: 2px;
+      background: #2aa3ff;
+      border-radius: 2px;
+    }
+
+    /* ADMIN */
+    .admin-area{
+      margin-left: auto;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .admin-text{
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      line-height: 1.2;
+      margin: 0;
+      transform: none;
+      white-space: nowrap;
+    }
+
+    .admin-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #e5edf5;
+    }
+
+    .admin-id {
+      font-size: 11px;
+      color: #9fb0c3;
+    }
+
+    .admin-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.28);
+      user-select: none;
+    }
+
+    .admin-icon svg { width: 18px; height: 18px; opacity: .85; }
+
+    .admin-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 6px;
+      min-width: 120px;
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(0,0,0,.18);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(6px);
+      transition: opacity .16s ease, transform .16s ease, visibility .16s;
+    }
+
+    .admin-dropdown.open{
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .dropdown-item {
+      padding: 9px 12px;
+      font-size: 13px;
+      color: #111827;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .dropdown-item:hover { background: rgba(17,24,39,.06); }
+
+    .dropdown-sep { height: 1px; background: rgba(17,24,39,.08); margin: 2px 0; }
+
+    .dropdown-item.logout {
+      color: #b91c1c;
+      font-weight: 800;
+    }
+
+    /* 마우스를 admin-area 위에 올리면 드롭다운 열림 */
+    .admin-area:hover .admin-dropdown{
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    /* =========================
+       PAGE CONTENT (기존 유지)
+       ========================= */
     .main-container { max-width:1200px; margin:26px auto; padding:0 20px; }
     .content-card { background:#fff; border-radius:12px; padding:24px; box-shadow:0 4px 12px rgba(0,0,0,0.05); }
     .section-title { font-size:24px; font-weight:bold; color:#2c3e50; margin-bottom:12px; border-left:5px solid #2aa3ff; padding-left:10px; }
@@ -113,18 +262,14 @@
 
     .result-count { margin:10px 0; font-size:13px; font-weight:bold; }
 
-    /* =========================
-       ✅ [변경] 테이블 디자인 (customer_list.jsp 느낌)
-       ========================= */
     .data-table { width:100%; border-collapse:collapse; margin-top:20px; table-layout: fixed; }
-
     .data-table th{
-      background:#f8f9fa;              /* 헤더 배경 회색 */
+      background:#f8f9fa;
       padding:12px;
       text-align:left;
-      border-bottom:2px solid #dee2e6; /* 아래선 굵게 */
+      border-bottom:2px solid #dee2e6;
       color:#495057;
-      font-size:16px;                 /* 헤더 2px 정도 키움(원하면 15/16 조절) */
+      font-size:16px;
     }
     .data-table td{
       padding:12px;
@@ -135,17 +280,14 @@
       text-overflow:ellipsis;
       white-space:nowrap;
     }
-    /* 이름 파란색 */
     .name-link{
       color:#3498db;
       text-decoration:none;
       font-weight:bold;
     }
-    /* ========================= */
 
     .no-result { padding:18px; text-align:center; color:#666; border:1px dashed #ccc; border-radius:10px; margin-top:10px; display:none; }
 
-    /* ✅ pagination */
     .pagination {
       display:flex;
       gap:10px;
@@ -178,27 +320,33 @@
   <nav class="navbar">
     <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
 
-    <ul class="nav-links">
+    <ul class="nav-links" id="navLinks">
       <li><a href="customer_list.jsp">顧客一覧</a></li>
-      <li><a href="district_manage.jsp" class="active">管轄区域管理</a></li>
-      <li><a href="overdue_list.jsp">滞納管理</a></li>
-      <li><a href="deposit_list.jsp">入金管理</a></li>
-      <li><a href="bill_list.jsp">請求管理</a></li>
+      <li><a href="district_manage.jsp">管轄区域管理</a></li>
+      <li><a href="overdue_list.jsp">延滞管理</a></li>
+      <li><a href="deposit.jsp">入金管理</a></li>
+      <li><a href="billing_list.jsp">請求管理</a></li>
     </ul>
 
-    <div class="admin-area">
+    <div class="admin-area" id="adminArea">
       <div class="admin-text">
-        <div class="admin-name"><%= (session.getAttribute("adminName") != null ? session.getAttribute("adminName") : "管理者") %> 様</div>
-        <div class="admin-id">社員番号 <%= (session.getAttribute("adminId") != null ? session.getAttribute("adminId") : "") %></div>
+        <div class="admin-name"><%= (session.getAttribute("adminName") == null ? "" : session.getAttribute("adminName")) %> 様</div>
+        <div class="admin-id">社員番号 <%= (session.getAttribute("adminId") == null ? "" : session.getAttribute("adminId")) %></div>
       </div>
 
-      <div class="admin-icon" title="管理者">
+      <div class="admin-icon">
         <svg viewBox="0 0 24 24" fill="none">
           <path d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Z"
                 stroke="#111827" stroke-width="1.6"/>
           <path d="M3 23c0-4.2 4-7.6 9-7.6s9 3.4 9 7.6"
                 stroke="#111827" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
+      </div>
+
+      <div class="admin-dropdown" id="adminDropdown">
+        <a href="admin.jsp" class="dropdown-item">設定</a>
+        <div class="dropdown-sep"></div>
+        <a href="logout.jsp" class="dropdown-item logout">ログアウト</a>
       </div>
     </div>
   </nav>
@@ -249,7 +397,6 @@
 
       <div class="no-result" id="noResult">検索結果がありません。</div>
 
-      <!-- ✅ pagination UI -->
       <div class="pagination" id="pagination" style="display:none;">
         <button type="button" class="page-btn" id="btnPrev">前へ</button>
         <span id="pageInfo">1 / 1 ページ</span>
@@ -260,11 +407,9 @@
   </div>
 
   <script>
-    // ✅ DB에서 읽어온 데이터를 rows 배열에 주입
     const rows = [
       <%= rowsJs.toString() %>
     ];
-    console.log("rows length =", rows.length);
 
     const districtSelect = document.getElementById("districtSelect");
     const nameInput = document.getElementById("nameInput");
@@ -307,7 +452,7 @@
       pageItems.forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML =
-          "<td><a href='#' class='name-link'>" + r.name + "</a></td>" +   // ✅ [변경] 이름 파란색
+          "<td><a href='#' class='name-link'>" + r.name + "</a></td>" +
           "<td>" + r.district + "</td>" +
           "<td>" + r.address + "</td>";
         tbody.appendChild(tr);
@@ -357,9 +502,25 @@
       }
     });
 
-    // 초기 렌더
     filteredRows = rows;
     renderTable(filteredRows);
+
+    // ✅ ADMIN DROPDOWN (click to toggle)
+    const adminArea = document.getElementById("adminArea");
+    const adminDropdown = document.getElementById("adminDropdown");
+
+    adminArea.addEventListener("click", function (e) {
+      e.stopPropagation();
+      adminDropdown.classList.toggle("open");
+    });
+
+    adminDropdown.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+
+    document.addEventListener("click", function () {
+      adminDropdown.classList.remove("open");
+    });
   </script>
 
 </body>
