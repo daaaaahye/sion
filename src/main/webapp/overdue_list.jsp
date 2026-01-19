@@ -45,7 +45,7 @@
     }
 
     /* ========================================================
-       3. DB 연동
+       3. DB 연동 (수정된 로직 반영)
        ======================================================== */
     Connection conn = null;
     PreparedStatement pstmt = null;
@@ -56,24 +56,31 @@
         conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
 
         String sql = 
-            "SELECT c.name, MIN(b.billing_date) AS oldest_unpaid_date, " +
-            "(SELECT COALESCE(SUM(bill_amount), 0) FROM public.bill WHERE customer_id = c.customer_id AND billing_date <= ?) " +
-            "- (SELECT COALESCE(SUM(paid_amount), 0) FROM public.deposit WHERE customer_id = c.customer_id AND paid_at <= ?) AS total_overdue_amount " +
-            "FROM public.customers c " +
-            "JOIN public.bill b ON c.customer_id = b.customer_id " +
-            "WHERE b.billing_date <= ? " +
+            "WITH BillingSummary AS (" +
+            "    SELECT customer_id, COALESCE(SUM(paid_amount), 0) as total_paid " +
+            "    FROM deposit WHERE paid_at <= ? GROUP BY customer_id" +
+            "), " +
+            "UnpaidDetails AS (" +
+            "    SELECT b.customer_id, b.billing_date, " +
+            "           SUM(b.bill_amount) OVER (PARTITION BY b.customer_id ORDER BY b.billing_date ASC) as cumulative_bill, " +
+            "           s.total_paid " +
+            "    FROM bill b " +
+            "    LEFT JOIN BillingSummary s ON b.customer_id = s.customer_id " +
+            "    WHERE b.billing_date <= ?" +
+            ") " +
+            "SELECT c.name, " +
+            "       (MAX(u.cumulative_bill) - COALESCE(MAX(u.total_paid), 0)) as total_overdue_amount, " +
+            "       MIN(CASE WHEN u.cumulative_bill > COALESCE(u.total_paid, 0) THEN u.billing_date END) as oldest_unpaid_date " +
+            "FROM customers c " +
+            "JOIN UnpaidDetails u ON c.customer_id = u.customer_id " +
             "GROUP BY c.customer_id, c.name " +
-            "HAVING (SELECT COALESCE(SUM(bill_amount), 0) FROM public.bill WHERE customer_id = c.customer_id AND billing_date <= ?) " +
-            "       - (SELECT COALESCE(SUM(paid_amount), 0) FROM public.deposit WHERE customer_id = c.customer_id AND paid_at <= ?) > 0 " +
+            "HAVING (MAX(u.cumulative_bill) - COALESCE(MAX(u.total_paid), 0)) > 0 " +
             "ORDER BY oldest_unpaid_date ASC";
 
         pstmt = conn.prepareStatement(sql);
         java.sql.Date sqlBaseDate = java.sql.Date.valueOf(baseDate);
         pstmt.setDate(1, sqlBaseDate);
         pstmt.setDate(2, sqlBaseDate);
-        pstmt.setDate(3, sqlBaseDate);
-        pstmt.setDate(4, sqlBaseDate);
-        pstmt.setDate(5, sqlBaseDate);
 
         rs = pstmt.executeQuery();
 %>
@@ -108,58 +115,27 @@
     .main-container { max-width:1200px; margin:26px auto; padding:0 20px; }
     .content-card { background:#fff; border-radius:12px; padding:24px; box-shadow:0 4px 12px rgba(0,0,0,0.05); }
     
-    /* 섹션 타이틀 (24px) */
     .section-title { font-size:24px; font-weight:bold; color:#2c3e50; margin-bottom:16px; border-left:5px solid #2aa3ff; padding-left:12px; line-height: 1.2; }
-
     .search-notice { margin:10px 0 14px; padding:12px 14px; border-radius:10px; background:#f1f6fb; border:1px solid #dbe9f6; font-size:13px; line-height:1.55; }
 
     .search-box { background:#f1f3f5; padding:18px; border-radius:10px; margin-bottom:20px; display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap; }
     .search-group { display:flex; flex-direction:column; gap:8px; }
     .search-group label { font-weight:bold; font-size:13px; }
 
-    input[type="date"], .btn-search {
-      padding:10px 14px;
-      border-radius:7px;
-      border:1px solid #d9dde3;
-      font-size:14px;
-      height:40px;
-    }
+    input[type="date"], .btn-search { padding:10px 14px; border-radius:7px; border:1px solid #d9dde3; font-size:14px; height:40px; }
     .btn-search { background:#2aa3ff; color:#fff; cursor:pointer; font-weight:800; border:none; padding: 0 25px; }
 
-    /* 기준 날짜 표시 (22px) */
     .display-base-date { margin: 15px 0 25px; font-size: 22px; font-weight: bold; color: #2aa3ff; display: flex; align-items: center; gap: 8px; }
 
-    /* Table 스타일 (14px 통일) */
+    /* Table 스타일 */
     .data-table { width:100%; border-collapse:collapse; margin-top:10px; table-layout: fixed; }
+    .data-table th { background: #f8f9fa; padding: 14px; border-bottom: 2px solid #dee2e6; color: #495057; font-size: 16px; font-weight: 800; text-align: center; }
+    .data-table td { padding: 14px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; font-weight: normal; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     
-    .data-table th { 
-      background: #f8f9fa; 
-      padding: 14px; 
-      border-bottom: 2px solid #dee2e6; 
-      color: #495057; 
-      font-size: 14px; 
-      font-weight: 800; 
-      text-align: center; 
-    }
+    .name-col { text-align: left !important; padding-left: 25px !important; }
+    .amount-text { text-align: right !important; padding-right: 30px !important; }
     
-    .data-table td { 
-      padding: 14px; 
-      border-bottom: 1px solid #eee; 
-      text-align: center; 
-      font-size: 14px; 
-      font-weight: normal; 
-      color: #333;
-      overflow: hidden; 
-      text-overflow: ellipsis; 
-      white-space: nowrap; 
-    }
-    
-    /* 이름 컬럼: 왼쪽 정렬 (볼드 제거) */
-    .name-col { text-align: left !important; padding-left: 25px !important; font-weight: normal !important; }
-    
-    /* 금액 컬럼: 오른쪽 정렬 (볼드 제거) */
-    .amount-text { text-align: right !important; padding-right: 30px !important; font-weight: normal !important; }
-    
+    /* 미납 기간 배지 */
     .date-badge { background: #f1f6fb; color: #2aa3ff; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; border: 1px solid #dbe9f6; }
   </style>
 </head>
@@ -172,7 +148,7 @@
       <li><a href="customer_list.jsp">顧客一覧</a></li>
       <li><a href="district_manage.jsp">管轄区域管理</a></li>
       <li><a href="overdue_list.jsp" class="active">滞納管理</a></li>
-      <li><a href="deposit_list.jsp">入금管理</a></li>
+      <li><a href="deposit_list.jsp">入金管理</a></li>
       <li><a href="billing_list.jsp">請求管理</a></li>
     </ul>
 
@@ -196,7 +172,7 @@
 
       <div class="search-notice">
         ※ 基準日を選択すると、その時点での滞納情報を確認できます。<br>
-        ※ 未納期間は支払期限が過ぎた最も古い請求日を基準に表示されます.
+        ※ 未納期間は、入金で相殺されていない**最も古い請求日**を基準に表示されます。
       </div>
 
       <form class="search-box" action="overdue_list.jsp" method="get">
@@ -229,7 +205,7 @@
           %>
           <tr>
             <td class="name-col"><%= rs.getString("name") %> 様</td> 
-            <td><span class="date-badge"><%= oldestDate %> 〜</span></td>
+            <td><span class="date-badge"><%= (oldestDate != null) ? oldestDate.toString() + " 〜" : "-" %></span></td>
             <td class="amount-text">¥<%= String.format("%,d", overdueAmount) %></td>
           </tr>
           <% } 
@@ -248,7 +224,7 @@
 
 <%
     } catch (Exception e) {
-        out.println("<div style='color:red; text-align:center; padding:20px;'>エラー 발생: " + e.getMessage() + "</div>");
+        out.println("<div style='color:red; text-align:center; padding:20px;'>エラー: " + e.getMessage() + "</div>");
     } finally {
         if (rs != null) try { rs.close(); } catch(Exception e) {}
         if (pstmt != null) try { pstmt.close(); } catch(Exception e) {}
