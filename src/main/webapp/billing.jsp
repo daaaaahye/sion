@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ page import="java.util.Random" %>
 <%
     String sessionAdminId = (String) session.getAttribute("adminId");
     String adminName = (String) session.getAttribute("adminName");
