@@ -24,6 +24,7 @@
     <hr>
 
     <% 
+    //파일 수정 테스트..............................................
         // POST 방식으로 데이터가 전송되었을 때 처리
         String amountStr = request.getParameter("amount");
         if (amountStr != null && !amountStr.isEmpty()) {
