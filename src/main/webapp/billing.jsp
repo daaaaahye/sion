@@ -202,7 +202,6 @@
                     </div>
 
                     <div class="footer-notice">
-                        
                         * お振込先: 三菱UFJ銀行 110-123-456789 (smart water)<br>
                         * お問い合わせ: 02-120 (水道お客さまセンター)
                     </div>
