@@ -23,6 +23,15 @@
         Class.forName("org.postgresql.Driver");
 
         /* ===============================
+<<<<<<< HEAD:src/main/webapp/dbtest.jsp
+           [2] wsms DB 연결 (customers, bill, deposit)
+           =============================== */
+        connWsms = DriverManager.getConnection(
+            "jdbc:postgresql://localhost:5432/wsms",
+            "postgres",
+            "1234"   // ⚠️ PostgreSQL 비밀번호
+        );
+=======
         [2] wsms DB 연결 (customers, bill, deposit)
         =============================== */
      connWsms = DriverManager.getConnection(
@@ -30,6 +39,7 @@
          "postgres",
          "1234" 
      );
+>>>>>>> d09c3612bae894e50dc9d47654672022047473dc:bin/src/main/webapp/main.jsp
 
         /* ===============================
            [3] 총 고객 수 조회

@@ -23,7 +23,11 @@
         conn = DriverManager.getConnection(
             "jdbc:postgresql://localhost:5432/root",
             "postgres",
+<<<<<<< HEAD
+            "1234"   // ⚠️ PostgreSQL 비밀번호
+=======
             "1234"
+>>>>>>> d09c3612bae894e50dc9d47654672022047473dc
         );
 
         String sql = "SELECT id, name FROM public.\"Administrator\" WHERE id = ? AND password = ?";
