@@ -169,7 +169,7 @@
 
                 <div class="bill-card">
                     <div class="bill-title">水道料金の請求書</div>
-                    <div class="bill-date">発行日: 2026年 1월 14일</div>
+                    <div class="bill-date">発行日: 2026年 1月 14日</div>
                     
                     <div class="bill-divider"></div>
 
@@ -202,9 +202,9 @@
                     </div>
 
                     <div class="footer-notice">
-                        * お支払期限: 2026年 1월 31일<br>
+                        
                         * お振込先: 三菱UFJ銀行 110-123-456789 (smart water)<br>
-                        * お問い合わせ: 02-120 (水道お客さまセンター)*
+                        * お問い合わせ: 02-120 (水道お客さまセンター)
                     </div>
                 </div>
             </div>
@@ -214,7 +214,7 @@
             <div class="bill-card">
                 <h3 style="color:#e74c3c;">お客様情報が見つかりません</h3>
                 <p>입력된 고객 ID: <strong><%= customerId %></strong></p>
-                <a href="customer_list.jsp" style="color:#3498db;">목록으로 돌아가기</a>
+                <a href="customer_list.jsp" style="color:#3498db;">リストに戻る</a>
             </div>
         <% } %>
     </div>
