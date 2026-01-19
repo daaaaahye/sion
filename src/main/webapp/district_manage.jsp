@@ -69,7 +69,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>管轄区域管理 - 水道管理システム</title>
+  <title>管轄区域管理 - SMART WATER</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>

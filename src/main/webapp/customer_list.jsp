@@ -46,7 +46,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>顧客管理 - SMART WATER</title>
+    <title>顧客一覧 - SMART WATER</title>
     <style>
         * { box-sizing: border-box; }
         body {

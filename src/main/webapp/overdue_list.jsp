@@ -89,7 +89,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>滞納管理 - SMART WATER JP</title>
+  <title>延滞管理 - SMART WATER</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; }
