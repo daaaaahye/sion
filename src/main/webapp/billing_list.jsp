@@ -37,13 +37,11 @@ String billingDate = request.getParameter("billing_date");
     Random rnd = new Random(); 
 
     try {
-        // 드라이버 로딩
         Class.forName("org.postgresql.Driver");
         
-        // 2. DB 연결 설정 (호스트, 계정, 비밀번호 확인 필요)
         connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
         connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
-        // 관리자 이름 동기화
+        
         String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";
         PreparedStatement pstmtAdmin = connRoot.prepareStatement(sqlAdmin);
         pstmtAdmin.setString(1, sessionAdminId);
@@ -85,12 +83,42 @@ String billingDate = request.getParameter("billing_date");
             <a href="logout.jsp" class="btn-logout">ログアウト</a>
         </div>
 	</nav>
-	<form class="search-box" method="get">
+
+
+<%
+sql =
+"SELECT c.customer_id, c.name, b.billing_date, b.bill_amount " +
+"FROM customers c " +
+"JOIN bill b ON c.customer_id = b.customer_id " +
+"JOIN ( " +
+"   SELECT customer_id, MAX(billing_date) AS latest_date " +
+"   FROM bill " +
+"   GROUP BY customer_id " +
+") lb ON b.customer_id = lb.customer_id " +
+"     AND b.billing_date = lb.latest_date ";
+
+if (name != null && !name.trim().isEmpty()) {
+sql +=" WHERE c.name LIKE ? ";
+}
+sql+=" ORDER BY c.customer_id";
+pstmt = connWsms.prepareStatement(sql);
+if (name != null && !name.trim().isEmpty()) {
+pstmt.setString(1, "%" + name + "%");
+}
+
+rs = pstmt.executeQuery();
+%>
+<div class="main-container">
+    <div class="content-card">
+        <div class="header-section">
+            <div class="title">🗓️ 請求履歴</div>
+        </div>
+        	<form class="search-box" method="get">
 	<div class="search-group">
-		<label>고객 조회</label>
-		<input type="text" name="name" value="<%= name != null ? name : "" %>" placeholder="이름을 입력하세요">
+		<label>顧客の照会</label>
+		<input type="text" name="name" value="<%= name != null ? name : "" %>" placeholder="名前を入力してください">
 <select name="billing_date" onchange="this.form.submit()">
-    <option value="">날짜를 선택하세요</option>
+    <option value="">日付を選択してください</option>
 <%
 String dateSql;
 
@@ -124,48 +152,19 @@ pstmtDate.close();
 </select>
 	<option value=""></option>
 	</div>
-	<button type="submit" class="btn-search">검색</button>
-	<button type="reset" class="btn-reset" onclick="location.href='billing_list.jsp'" >초기화</button>
+	<button type="button" class="btn-search" id="btnSearch" style="padding-left:25px; padding-right:25px;">検索</button>
+	<button type="button" class="btn-reset" onclick="location.href='billing_list.jsp'" >初期化</button>
 </form>
-
-<%
-sql =
-"SELECT c.customer_id, c.name, b.billing_date, b.bill_amount " +
-"FROM customers c " +
-"JOIN bill b ON c.customer_id = b.customer_id " +
-"JOIN ( " +
-"   SELECT customer_id, MAX(billing_date) AS latest_date " +
-"   FROM bill " +
-"   GROUP BY customer_id " +
-") lb ON b.customer_id = lb.customer_id " +
-"     AND b.billing_date = lb.latest_date ";
-
-if (name != null && !name.trim().isEmpty()) {
-sql +=" WHERE c.name LIKE ? ";
-}
-sql+=" ORDER BY c.customer_id";
-pstmt = connWsms.prepareStatement(sql);
-if (name != null && !name.trim().isEmpty()) {
-pstmt.setString(1, "%" + name + "%");
-}
-
-rs = pstmt.executeQuery();
-%>
-<div class="main-container">
-    <div class="content-card">
-        <div class="header-section">
-            <div class="title">🗓️ 청구 내역 </div>
-        </div>
        	<div class = "customer">
          <table class="billing-table">
              <thead>
                  <tr>
-                 	<th>회원 번호</th>
-                 	<th>고객명</th>
+                 	<th>会員番号</th>
+                 	<th>顧客名</th>
                      <!-- <th>날짜 조회</th> -->
-              <th>청구 금액</th>
+              <th>請求額</th>
               <!-- <th>납부 상태</th> -->
-        <th>고지서 조회</th>
+        <th>通知書の照会</th>
     </tr>
 </thead>
 <tbody>
@@ -200,7 +199,11 @@ String formattedAmount = nf.format(billAmount);
 ¥ <%= formattedAmount %>
 </td>
 <!-- <td></td> -->
-<td><button class="btn-view" type="button" onclick="location.href='billing.jsp'">고지서 조회</button></td>
+<td>
+    <button class="btn-view" type="button" 
+    onclick="location.href='billing.jsp?customer_id=<%= rs.getString("customer_id") %>&billing_date=<%= (billingDate != null && rs.getString("customer_id").equals(id)) ? billingDate : rs.getDate("billing_date") %>'" 
+    class="active">通知書の照会</button>
+</td>
 </tr>
 <% 
 }
