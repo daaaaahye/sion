@@ -4,19 +4,19 @@
    /* 로그인 확인 */
     String sessionAdminId = (String) session.getAttribute("adminId");
     String sessionAdminName = (String) session.getAttribute("adminName");
-	
+
     if (sessionAdminId == null) {
         response.sendRedirect("login.jsp");
         return;
     }
 
-    Connection connWsms = null;   
+    Connection connWsms = null;
     PreparedStatement pstmt = null;
     ResultSet rs = null;
-	
+
     /* 총 고객수 & 미납자 변수 생성 및 초기화 */
-    int totalCount = 0;   
-    int unpaidCount = 0; 
+    int totalCount = 0;
+    int unpaidCount = 0;
 
     /* DB 연결 */
     try {
@@ -30,12 +30,12 @@
 
         /* 총 고객수 계산 및 변수 저장 */
         String totalSql = "SELECT COUNT(*) FROM public.customers";
-        
+
         pstmt = connWsms.prepareStatement(totalSql);
         rs = pstmt.executeQuery();
         if (rs.next()) totalCount = rs.getInt(1);
         rs.close(); pstmt.close();
-        
+
         /* 미납자 수 계산 및 변수 저장 */
         String overdueSql =
              "SELECT COUNT(*) FROM (" +
@@ -48,10 +48,11 @@
              "    HAVING (SELECT COALESCE(SUM(bill_amount), 0) FROM public.bill WHERE customer_id = c.customer_id AND billing_date <= CURRENT_DATE) " +
              "           - (SELECT COALESCE(SUM(paid_amount), 0) FROM public.deposit WHERE customer_id = c.customer_id AND paid_at <= CURRENT_DATE) > 0 " +
              ") AS unpaid_customers";
-        
+
         pstmt = connWsms.prepareStatement(overdueSql);
         rs = pstmt.executeQuery();
         if (rs.next()) unpaidCount = rs.getInt(1);
+        rs.close(); pstmt.close();
 %>
 <!DOCTYPE html>
 <html lang="ja">
@@ -77,6 +78,9 @@
         padding: 0 22px;
         gap: 26px;
         position: relative;
+
+        /* ✅ 메뉴/관리자 한줄 고정 */
+        flex-wrap: nowrap;
       }
 
       .navbar-brand {
@@ -85,16 +89,36 @@
         color: #2aa3ff;
         text-decoration: none;
         white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
       }
 
       .nav-links {
         list-style: none;
         display: flex;
-        align-items: center;
+        align-items: stretch; /* ✅ (추가) 메뉴 높이를 navbar와 동일하게 */
         gap: 22px;
         margin: 0;
         padding: 0;
         position: relative;
+
+        /* ✅ 메뉴 한줄 고정 + 좁으면 가로스크롤 */
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none; /* Firefox */
+      }
+      .nav-links::-webkit-scrollbar { display: none; } /* Chrome */
+
+      /* ✅ (추가) li를 flex로 만들어 baseline 차이 제거 */
+      .nav-links li{
+        display: flex;
+        align-items: center;
+        flex: 0 0 auto;
       }
 
       .nav-links a {
@@ -102,10 +126,15 @@
         text-decoration: none;
         font-size: 13px;
         font-weight: 600;
-        padding: 18px 4px 14px;
         white-space: nowrap;
-        display: inline-block;
         position: relative;
+
+        /* ✅ (핵심) 높낮이/베이스라인 완전 고정 */
+        height: 56px;           /* navbar 높이와 동일 */
+        display: flex;
+        align-items: center;    /* 글자 세로 중앙 */
+        padding: 0 4px;         /* 세로 padding 제거 */
+        line-height: 1;         /* 폰트 섞여도 baseline 영향 최소화 */
       }
 
       .nav-links a:hover { color: #ffffff; }
@@ -117,6 +146,9 @@
         display: flex;
         align-items: center;
         gap: 10px;
+
+        /* ✅ admin 영역 줄바꿈/눌림 방지 */
+        flex: 0 0 auto;
       }
 
       .admin-text{
@@ -126,6 +158,7 @@
         line-height: 1.2;
         margin: 0;
         transform: none;
+        white-space: nowrap;
       }
 
       .admin-name {
@@ -149,6 +182,7 @@
         justify-content: center;
         box-shadow: 0 0 0 2px rgba(255,255,255,.28);
         user-select: none;
+        cursor: pointer;
       }
 
       .admin-icon svg { width: 18px; height: 18px; opacity: .85; }
@@ -232,8 +266,6 @@
       <li><a href="billing_list.jsp">請求管理</a></li>
     </ul>
 
-    <!-- ✅ navIndicator 삭제 (언더라인 제거) -->
-
     <div class="admin-area" id="adminArea">
       <div class="admin-text">
         <div class="admin-name"><%= (sessionAdminName == null ? "" : sessionAdminName) %> 様</div>
@@ -277,8 +309,6 @@
   </div>
 
   <script>
-    // ✅ navIndicator 관련 JS 삭제 완료 (언더라인 제거)
-
     // ✅ ADMIN DROPDOWN (click to toggle)
     const adminArea = document.getElementById("adminArea");
     const adminDropdown = document.getElementById("adminDropdown");
@@ -301,7 +331,7 @@
 <%
     } catch (Exception e) {
         out.println("에러 발생: " + e.getMessage());
-    } finally { 
+    } finally {
         if (rs != null) try { rs.close(); } catch(Exception e) {}
         if (pstmt != null) try { pstmt.close(); } catch(Exception e) {}
         if (connWsms != null) try { connWsms.close(); } catch(Exception e) {}

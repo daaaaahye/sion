@@ -51,7 +51,7 @@ String billingDate = request.getParameter("billing_date");
 %>
 
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -235,7 +235,7 @@ String billingDate = request.getParameter("billing_date");
               <td>¥ <%= formattedAmount %></td>
               <td>
                 <button class="btn-view" type="button"
-                  onclick="location.href='billing.jsp?customer_id=<%= rs.getString("customer_id") %>&billing_date=<%= rs.getString("billing_date") %>'">
+                  onclick="location.href='billing_list_detail.jsp?customer_id=<%= rs.getString("customer_id") %>&billing_date=<%= rs.getString("billing_date") %>'">
                   通知書の照会
                 </button>
               </td>

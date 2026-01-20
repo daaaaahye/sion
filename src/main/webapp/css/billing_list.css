@@ -1,15 +1,37 @@
 @charset "UTF-8";
 
 * { box-sizing: border-box; }
-body {
+
+html, body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
   margin: 0;
   background: #f5f6f8;
   color: #111827;
 }
 
+/* ✅ 핵심: 폼/버튼/테이블까지 글씨체 완전 통일 */
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+table {
+  font-family: inherit;
+}
+
+/* ✅✅ 메뉴만 글씨체가 달라지는 문제 “완전 해결” */
+.nav-links a,
+.nav-links a:visited,
+.nav-links a:hover,
+.nav-links a:active {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+}
+
 /* ===============================
-   ✅ TOP NAVBAR (통합 버전)
+   ✅ TOP NAVBAR (완전 정렬 고정 버전)
    =============================== */
 .navbar{
   height: 56px;
@@ -18,39 +40,55 @@ body {
   align-items: center;
   padding: 0 22px;
   gap: 26px;
-  position: relative; /* 드롭다운 위치 기준 */
+  position: relative;
+  flex-wrap: nowrap;
 }
 
 .navbar-brand{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-weight:800;
-  font-size:16px;
-  color:#2aa3ff;
-  text-decoration:none;
-  white-space:nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 16px;
+  color: #2aa3ff;
+  text-decoration: none;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .nav-links{
-  list-style:none;
-  display:flex;
-  align-items:center;
-  gap:22px;      /* 통합 버전 간격 */
-  margin:0;
-  padding:0;
+  list-style: none;
+  display: flex;
+  align-items: stretch;
+  gap: 22px;
+  margin: 0;
+  padding: 0;
   position: relative;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.nav-links::-webkit-scrollbar { display: none; }
+
+.nav-links li{
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
 }
 
 .nav-links a{
-  color:#cbd5e1;
-  text-decoration:none;
-  font-size:13px;
-  font-weight:600;
-  padding:18px 4px 14px; /* 통합 버전 패딩 */
-  white-space:nowrap;
-  display:inline-block;
-  position:relative;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 13px;
+  white-space: nowrap;
+  position: relative;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
 }
 
 .nav-links a:hover { color:#ffffff; }
@@ -60,7 +98,7 @@ body {
   content:"";
   position:absolute;
   left:0;
-  bottom:6px;
+  bottom: 10px;
   width:100%;
   height:2px;
   background:#2aa3ff;
@@ -68,46 +106,47 @@ body {
 }
 
 /* ===============================
-   ✅ ADMIN (통합 버전 + dropdown)
+   ✅ ADMIN (통합 버전 + dropdown) - 정렬 고정 포함
    =============================== */
 .admin-area{
-  margin-left:auto;
-  position:relative;
-  display:flex;
-  align-items:center;
-  gap:10px;
+  margin-left: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
 }
 
 .admin-text{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  line-height:1.2;
-  white-space:nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .admin-name{
-  font-size:12px;
-  font-weight:700;
-  color:#e5edf5;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e5edf5;
 }
 
 .admin-id{
-  font-size:11px;
-  color:#9fb0c3;
+  font-size: 11px;
+  color: #9fb0c3;
 }
 
 .admin-icon{
-  width:30px;
-  height:30px;
-  border-radius:50%;
-  background:rgba(255,255,255,.92);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 0 0 2px rgba(255,255,255,.28);
-  user-select:none;
-  cursor:pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.28);
+  user-select: none;
+  cursor: pointer;
 }
 
 .admin-icon svg{ width:18px; height:18px; opacity:.85; }
@@ -143,7 +182,6 @@ body {
   transform: translateY(0);
 }
 
-/* hover로도 열리게 */
 .admin-area:hover .admin-dropdown{
   opacity:1;
   visibility:visible;

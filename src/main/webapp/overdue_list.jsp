@@ -101,7 +101,7 @@
     }
 
     /* ===============================
-       ✅ TOP NAVBAR (통합 버전)
+       ✅ TOP NAVBAR (완전 정렬 고정 버전)
        =============================== */
     .navbar {
       height: 56px;
@@ -111,6 +111,9 @@
       padding: 0 22px;
       gap: 26px;
       position: relative;
+
+      /* ✅ 한 줄 고정 */
+      flex-wrap: nowrap;
     }
 
     .navbar-brand {
@@ -119,16 +122,40 @@
       color: #2aa3ff;
       text-decoration: none;
       white-space: nowrap;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
     }
 
     .nav-links {
       list-style: none;
       display: flex;
-      align-items: center;
+
+      /* ✅ 높이 통일 */
+      align-items: stretch;
+
       gap: 22px;
       margin: 0;
       padding: 0;
       position: relative;
+
+      /* ✅ 한 줄 고정 + 좁으면 가로 스크롤 */
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      min-width: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+
+    .nav-links li {
+      /* ✅ baseline 차이 제거 */
+      display: flex;
+      align-items: center;
+      flex: 0 0 auto;
     }
 
     .nav-links a {
@@ -136,10 +163,15 @@
       text-decoration: none;
       font-size: 13px;
       font-weight: 600;
-      padding: 18px 4px 14px;
       white-space: nowrap;
-      display: inline-block;
       position: relative;
+
+      /* ✅ 높낮이 완전 고정 */
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      line-height: 1;
     }
 
     .nav-links a:hover { color: #ffffff; }
@@ -149,20 +181,23 @@
       content: "";
       position: absolute;
       left: 0;
-      bottom: 6px;
+      bottom: 10px; /* ✅ 56px 높이 기준 안정화 */
       width: 100%;
       height: 2px;
       background: #2aa3ff;
       border-radius: 2px;
     }
 
-    /* ADMIN */
+    /* ===============================
+       ✅ ADMIN (통합 버전 + dropdown) - 정렬 고정 포함
+       =============================== */
     .admin-area{
       margin-left: auto;
       position: relative;
       display: flex;
       align-items: center;
       gap: 10px;
+      flex: 0 0 auto;
     }
 
     .admin-text{
@@ -237,16 +272,12 @@
       color: #111827;
       text-decoration: none;
       white-space: nowrap;
+      display: block;
     }
 
     .dropdown-item:hover { background: rgba(17,24,39,.06); }
-
     .dropdown-sep { height: 1px; background: rgba(17,24,39,.08); margin: 2px 0; }
-
-    .dropdown-item.logout {
-      color: #b91c1c;
-      font-weight: 800;
-    }
+    .dropdown-item.logout { color: #b91c1c; font-weight: 800; }
 
     /* hover로도 열리게 */
     .admin-area:hover .admin-dropdown{
@@ -282,12 +313,42 @@
     .amount-text { text-align: right !important; padding-right: 30px !important; }
 
     .date-badge { background: #f1f6fb; color: #2aa3ff; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; border: 1px solid #dbe9f6; }
+
+    @media (max-width: 860px){
+      .navbar{
+        height:auto;
+        flex-direction: column;
+        align-items:center;
+        gap:10px;
+        padding:14px 14px;
+      }
+      .nav-links{
+        flex-direction: column;
+        align-items:center;
+        gap:6px;
+        overflow: visible;
+      }
+      .nav-links li{ display:block; }
+      .nav-links a{
+        height:auto;
+        padding:10px 6px;
+      }
+      .admin-text{ display:none; }
+      .admin-dropdown{
+        left:50%;
+        right:auto;
+        transform: translate(-50%, 6px);
+      }
+      .admin-dropdown.open{
+        transform: translate(-50%, 0);
+      }
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- ✅ 메뉴바: 통합 버전 적용 -->
+  <!-- ✅ 메뉴바: 완전 정렬 고정 버전 적용 -->
   <nav class="navbar">
     <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
 
