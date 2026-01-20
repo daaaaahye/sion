@@ -383,7 +383,7 @@
 
                 <div class="bill-card">
                     <div class="bill-title">水道料金の請求書</div>
-                    <div class="bill-date">発行日: 2026年 1月 14日</div>
+                    <div class="bill-date"></div>
 
                     <div class="bill-divider"></div>
 

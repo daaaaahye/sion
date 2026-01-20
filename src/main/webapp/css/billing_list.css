@@ -9,7 +9,6 @@ html, body {
   color: #111827;
 }
 
-/* ✅ 핵심: 폼/버튼/테이블까지 글씨체 완전 통일 */
 button, input, select, textarea {
   font-family: inherit;
   font-size: inherit;
@@ -20,7 +19,6 @@ table {
   font-family: inherit;
 }
 
-/* ✅✅ 메뉴만 글씨체가 달라지는 문제 “완전 해결” */
 .nav-links a,
 .nav-links a:visited,
 .nav-links a:hover,
@@ -29,10 +27,6 @@ table {
   font-weight: 600 !important;
   line-height: 1 !important;
 }
-
-/* ===============================
-   ✅ TOP NAVBAR (완전 정렬 고정 버전)
-   =============================== */
 .navbar{
   height: 56px;
   background: #243646;
@@ -92,8 +86,6 @@ table {
 }
 
 .nav-links a:hover { color:#ffffff; }
-
-/* ✅ 5번째 메뉴(請求管理) 아래 언더라인 고정 */
 .nav-links li:nth-child(5) a::after{
   content:"";
   position:absolute;
@@ -104,10 +96,6 @@ table {
   background:#2aa3ff;
   border-radius:2px;
 }
-
-/* ===============================
-   ✅ ADMIN (통합 버전 + dropdown) - 정렬 고정 포함
-   =============================== */
 .admin-area{
   margin-left: auto;
   position: relative;
@@ -116,7 +104,6 @@ table {
   gap: 10px;
   flex: 0 0 auto;
 }
-
 .admin-text{
   display: flex;
   flex-direction: column;
@@ -124,18 +111,15 @@ table {
   line-height: 1.2;
   white-space: nowrap;
 }
-
 .admin-name{
   font-size: 12px;
   font-weight: 700;
   color: #e5edf5;
 }
-
 .admin-id{
   font-size: 11px;
   color: #9fb0c3;
 }
-
 .admin-icon{
   width: 30px;
   height: 30px;
@@ -148,9 +132,7 @@ table {
   user-select: none;
   cursor: pointer;
 }
-
 .admin-icon svg{ width:18px; height:18px; opacity:.85; }
-
 .admin-dropdown{
   position:absolute;
   top:100%;
@@ -167,28 +149,24 @@ table {
   flex-direction:column;
   overflow:hidden;
   z-index:1000;
-
   opacity:0;
   visibility:hidden;
   pointer-events:none;
   transform: translateY(6px);
   transition: opacity .16s ease, transform .16s ease, visibility .16s;
 }
-
 .admin-dropdown.open{
   opacity:1;
   visibility:visible;
   pointer-events:auto;
   transform: translateY(0);
 }
-
 .admin-area:hover .admin-dropdown{
   opacity:1;
   visibility:visible;
   pointer-events:auto;
   transform: translateY(0);
 }
-
 .dropdown-item{
   padding:9px 12px;
   font-size:13px;
@@ -197,7 +175,6 @@ table {
   display:block;
   white-space:nowrap;
 }
-
 .dropdown-item:hover{ background: rgba(17,24,39,.06); }
 
 .dropdown-sep{
@@ -205,28 +182,23 @@ table {
   background: rgba(17,24,39,.08);
   margin:2px 0;
 }
-
 .dropdown-item.logout{
   color:#b91c1c;
   font-weight:800;
   font-size:13px;
 }
-
-/* ===============================
-   ✅ PAGE CONTENT (기존 CSS 유지)
-   =============================== */
-.main-container {max-width:1200px; margin:15px auto; padding:0 20px;}
+.main-container {max-width:1200px; margin:26px auto; padding:0 20px;}
 .content-card {
   background:#fff; border-radius:12px; padding:24px;
   box-shadow:0 4px 12px rgba(0,0,0,0.05)
 }
-.header-section {
-  border-bottom: 2px solid #3498db; padding-bottom: 15px;
-  margin-bottom: 20px;
+.search-notice { 
+	margin:10px 0 14px; padding:12px 14px; border-radius:10px; 
+	background:#f1f6fb !important; border:1px solid #dbe9f6; font-size:13px; line-height:1.55; 
 }
 .title {
-  font-size: 24px; font-weight: bold; display: flex;
-  align-items: center; gap: 10px;
+	font-size:24px; font-weight:bold; color:#2c3e50; margin-bottom:12px; 
+	border-left:5px solid #2aa3ff; padding-left:10px;
 }
 .search-box {
   display: flex !important;
