@@ -147,7 +147,7 @@ String billingDate = request.getParameter("billing_date");
     	<div class="title">🗓️ 請求履歴</div>
         <div class="search-notice">
         ※ 名前と日付を入力してください。<br>
-        ※ 日付を選択しないと、お客様の最近の通知が照会されます。
+        ※日付を選択しない場合、お客様の最新請求書が照会されます。
         </div>
 
       <div class="customer">
