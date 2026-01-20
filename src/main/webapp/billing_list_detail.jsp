@@ -17,7 +17,7 @@
 
     if (customerId == null || customerId.isEmpty() ||
         billingDate == null || billingDate.isEmpty()) {
-        out.println("<h3>잘못된 접근입니다.</h3>");
+        out.println("<h3>間違ったアプローチです</h3>");
         return;
     }
 
@@ -41,7 +41,7 @@
         connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
         connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
 
-        // ✅ 관리자 이름 동기화
+
         String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";
         pstmtAdmin = connRoot.prepareStatement(sqlAdmin);
         pstmtAdmin.setString(1, sessionAdminId);
@@ -53,7 +53,6 @@
         if (rsAdmin != null) rsAdmin.close();
         if (pstmtAdmin != null) pstmtAdmin.close();
 
-        // ✅ 선택한 billingDate가 bill 테이블에 존재하는지 체크
         String checkSql = "SELECT 1 FROM bill WHERE customer_id=? AND billing_date=?";
         PreparedStatement chkPstmt = connWsms.prepareStatement(checkSql);
         chkPstmt.setString(1, customerId);
@@ -63,7 +62,6 @@
         if (chkRs != null) chkRs.close();
         if (chkPstmt != null) chkPstmt.close();
 
-        // ✅ 고객/청구/입금 합산(해당 날짜 기준)
         String sql =
             "SELECT c.name, c.tel, c.address, " +
             " (SELECT bill_amount FROM public.bill WHERE customer_id = ? AND billing_date = ?) as monthly_bill, " +
@@ -110,13 +108,11 @@
   <title>上水道料金 請求書 - SMART WATER</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- ✅ 통일 메뉴바 + 청구서 CSS (한 파일로 관리) -->
-  <link rel="stylesheet" href="<%=request.getContextPath()%>/css/billing.css?v=1">
+  <link rel="stylesheet" href="<%=request.getContextPath()%>/css/billing_list_detail.css?v=1">
 </head>
 
 <body>
 
-  <!-- ✅ TOP NAVBAR (통일본 그대로) -->
   <nav class="navbar">
     <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
 
@@ -154,9 +150,9 @@
   <div class="main-container">
     <% if (noBillingDate) { %>
       <div class="error">
-        <h2>📅 선택한 날짜의 고지서가 없습니다</h2>
-        <p>선택한 청구일 : <%= billingDate %></p>
-        <button class="back" onclick="history.back()">이전 페이지로</button>
+        <h2>📅 選択した日付の告知書がありません</h2>
+        <p>選択した請求日: <%= billingDate %></p>
+        <button class="back" onclick="history.back()">前のページへ</button>
       </div>
     <% } else {
         long overdueAmount = (totalBilled - totalPaid) - monthlyBill;
@@ -175,15 +171,15 @@
         <div class="bill-divider"></div>
 
         <table class="info-table">
-          <tr><th>お名前(고객명)</th><td><%= rs.getString("name") %> 様</td></tr>
-          <tr><th>お客様番号 (ID)</th><td><%= customerId %></td></tr>
-          <tr><th>ご住所(주소)</th><td><%= rs.getString("address") %></td></tr>
-          <tr><th>今月分のご請求金額(이번달 청구액)</th><td><%= df.format(monthlyBill) %>円</td></tr>
-          <tr><th>未払金額(연체료)</th><td><%= df.format(overdueAmount) %>円</td></tr>
+          <tr><th>お名前</th><td><%= rs.getString("name") %> 様</td></tr>
+          <tr><th>お客様番号</th><td><%= customerId %></td></tr>
+          <tr><th>ご住所</th><td><%= rs.getString("address") %></td></tr>
+          <tr><th>今月分のご請求金額</th><td><%= df.format(monthlyBill) %>円</td></tr>
+          <tr><th>未払金額</th><td><%= df.format(overdueAmount) %>円</td></tr>
         </table>
 
         <div class="total-wrapper">
-          <span class="total-label">お支払い合計額(지불 합계)</span>
+          <span class="total-label">お支払い合計額</span>
           <span class="total-text"><%= df.format(finalTotal) %>円</span>
         </div>
 
@@ -196,7 +192,6 @@
   </div>
 
   <script>
-    // ✅ ADMIN DROPDOWN (click to toggle)
     (function () {
       const adminArea = document.getElementById("adminArea");
       const adminDropdown = document.getElementById("adminDropdown");
@@ -221,7 +216,6 @@
 </html>
 
 <%
-    // ✅ 리소스 정리
     try { if (rs != null) rs.close(); } catch(Exception e) {}
     try { if (pstmt != null) pstmt.close(); } catch(Exception e) {}
     try { if (connRoot != null) connRoot.close(); } catch(Exception e) {}

@@ -1,6 +1,3 @@
-/* ===============================
-   ✅ GLOBAL
-   =============================== */
 * { box-sizing: border-box; }
 
 body{
@@ -10,9 +7,6 @@ body{
   color: #111827;
 }
 
-/* ===============================
-   ✅ TOP NAVBAR (통일본 - 정렬 고정 버전)
-   =============================== */
 .navbar{
   height:56px;
   background:#243646;
@@ -80,7 +74,6 @@ body{
 
 .nav-links a:hover{ color:#ffffff; }
 
-/* ✅ 활성 메뉴 언더라인(통일 규칙) */
 .nav-links a.is-active::after{
   content:"";
   position:absolute;
@@ -92,9 +85,6 @@ body{
   border-radius:2px;
 }
 
-/* ===============================
-   ✅ ADMIN (통일본 + dropdown)
-   =============================== */
 .admin-area{
   margin-left:auto;
   position:relative;
@@ -170,7 +160,6 @@ body{
   transform: translateY(0);
 }
 
-/* hover로도 열리게 */
 .admin-area:hover .admin-dropdown{
   opacity:1;
   visibility:visible;
@@ -199,16 +188,12 @@ body{
   font-weight:800;
 }
 
-/* ===============================
-   ✅ PAGE LAYOUT (기존 청구서 유지)
-   =============================== */
 .main-container{
   padding: 40px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
 
-  /* ✅ navbar 높이 56px 기준 */
   min-height: calc(100vh - 56px);
 }
 
@@ -263,13 +248,9 @@ body{
 }
 .btn-print:hover{ background-color: #1f8fe6; }
 
-/* 에러 UI */
 .error{ padding:40px; text-align:center; }
 .error h2{ margin:0 0 10px 0; }
 
-/* ===============================
-   ✅ PRINT
-   =============================== */
 @media print{
   body{ background: white; }
   .navbar, .btn-print-area{ display: none; }
