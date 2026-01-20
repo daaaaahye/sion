@@ -14,6 +14,7 @@
     }
 
     if (adminName == null) adminName = "管理者";
+
     if (customerId == null || customerId.isEmpty() ||
         billingDate == null || billingDate.isEmpty()) {
         out.println("<h3>잘못된 접근입니다.</h3>");
@@ -32,31 +33,37 @@
     long totalBilled = 0;
     long totalPaid = 0;
 
+    PreparedStatement pstmtAdmin = null;
+    ResultSet rsAdmin = null;
+
     try {
         Class.forName("org.postgresql.Driver");
         connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
         connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
 
+        // ✅ 관리자 이름 동기화
         String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";
-        PreparedStatement pstmtAdmin = connRoot.prepareStatement(sqlAdmin);
+        pstmtAdmin = connRoot.prepareStatement(sqlAdmin);
         pstmtAdmin.setString(1, sessionAdminId);
-        ResultSet rsAdmin = pstmtAdmin.executeQuery();
+        rsAdmin = pstmtAdmin.executeQuery();
         if (rsAdmin.next()) {
             adminName = rsAdmin.getString("name");
             session.setAttribute("adminName", adminName);
         }
-        rsAdmin.close();
-        pstmtAdmin.close();
+        if (rsAdmin != null) rsAdmin.close();
+        if (pstmtAdmin != null) pstmtAdmin.close();
 
+        // ✅ 선택한 billingDate가 bill 테이블에 존재하는지 체크
         String checkSql = "SELECT 1 FROM bill WHERE customer_id=? AND billing_date=?";
         PreparedStatement chkPstmt = connWsms.prepareStatement(checkSql);
         chkPstmt.setString(1, customerId);
         chkPstmt.setDate(2, java.sql.Date.valueOf(billingDate));
         ResultSet chkRs = chkPstmt.executeQuery();
         if (!chkRs.next()) noBillingDate = true;
-        chkRs.close();
-        chkPstmt.close();
+        if (chkRs != null) chkRs.close();
+        if (chkPstmt != null) chkPstmt.close();
 
+        // ✅ 고객/청구/입금 합산(해당 날짜 기준)
         String sql =
             "SELECT c.name, c.tel, c.address, " +
             " (SELECT bill_amount FROM public.bill WHERE customer_id = ? AND billing_date = ?) as monthly_bill, " +
@@ -85,177 +92,31 @@
         }
 
     } catch (Exception e) {
-        e.printStackTrace();
+        out.println("<div style='color:red; background:#fff; padding:20px; border:2px solid red; margin:20px;'>");
+        out.println("<h3>에러 발생:</h3>");
+        out.println("<p>" + e.getMessage() + "</p>");
+        out.println("<pre>");
+        e.printStackTrace(new java.io.PrintWriter(out));
+        out.println("</pre>");
+        out.println("</div>");
         return;
     }
 %>
 
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>상수도 요금 청구서 - SMART WATER</title>
+  <title>上水道料金 請求書 - SMART WATER</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- 기존 청구서 CSS -->
-  <link rel="stylesheet" href="css/billing.css">
-
-  <!-- ✅ main.jsp와 메뉴바 규격 100% 동일 강제 (충돌 방지용 !important 포함) -->
-  <style>
-    /* body 기본(메뉴바 기준 통일) */
-    body{
-      margin: 0 !important;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif !important;
-      background: #f5f6f8 !important;
-      color: #111827 !important;
-    }
-
-    /* NAVBAR (main.jsp 동일 규격) */
-    .navbar{
-      height: 56px !important;
-      background: #243646 !important;
-      display: flex !important;
-      align-items: center !important;
-      padding: 0 22px !important;
-      gap: 26px !important;
-      position: relative !important;
-    }
-
-    .navbar-brand{
-      font-weight: 800 !important;
-      font-size: 16px !important;
-      color: #2aa3ff !important;
-      text-decoration: none !important;
-      white-space: nowrap !important;
-    }
-
-    .nav-links{
-      list-style: none !important;
-      display: flex !important;
-      align-items: center !important;
-      gap: 22px !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      position: relative !important;
-    }
-
-    .nav-links a{
-      color: #cbd5e1 !important;
-      text-decoration: none !important;
-      font-size: 13px !important;
-      font-weight: 600 !important;
-      padding: 18px 4px 14px !important;
-      white-space: nowrap !important;
-      display: inline-block !important;
-      position: relative !important;
-      border-bottom: 0 !important; /* 이 페이지는 언더라인 없음 */
-    }
-
-    .nav-links a:hover{ color: #ffffff !important; }
-
-    /* ADMIN (main.jsp 동일 규격) */
-    .admin-area{
-      margin-left: auto !important;
-      position: relative !important;
-      display: flex !important;
-      align-items: center !important;
-      gap: 10px !important;
-    }
-
-    .admin-text{
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: flex-end !important;
-      line-height: 1.2 !important;
-      margin: 0 !important;
-      transform: none !important;
-      white-space: nowrap !important;
-    }
-
-    .admin-name{
-      font-size: 12px !important;
-      font-weight: 700 !important;
-      color: #e5edf5 !important;
-    }
-
-    .admin-id{
-      font-size: 11px !important;
-      color: #9fb0c3 !important;
-    }
-
-    .admin-icon{
-      width: 30px !important;
-      height: 30px !important;
-      border-radius: 50% !important;
-      background: rgba(255,255,255,.92) !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      box-shadow: 0 0 0 2px rgba(255,255,255,.28) !important;
-      user-select: none !important;
-    }
-
-    .admin-icon svg{ width: 18px !important; height: 18px !important; opacity: .85 !important; }
-
-    .admin-dropdown{
-      position: absolute !important;
-      top: 100% !important;
-      right: 0 !important;
-      margin-top: 6px !important;
-      min-width: 120px !important;
-      background: rgba(255,255,255,.72) !important;
-      backdrop-filter: blur(10px) !important;
-      -webkit-backdrop-filter: blur(10px) !important;
-      border: 1px solid rgba(229,231,235,.9) !important;
-      border-radius: 12px !important;
-      box-shadow: 0 16px 36px rgba(0,0,0,.18) !important;
-      display: flex !important;
-      flex-direction: column !important;
-      overflow: hidden !important;
-      z-index: 1000 !important;
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-      transform: translateY(6px) !important;
-      transition: opacity .16s ease, transform .16s ease, visibility .16s !important;
-    }
-
-    .admin-dropdown.open{
-      opacity: 1 !important;
-      visibility: visible !important;
-      pointer-events: auto !important;
-      transform: translateY(0) !important;
-    }
-
-    .dropdown-item{
-      padding: 9px 12px !important;
-      font-size: 13px !important;
-      color: #111827 !important;
-      text-decoration: none !important;
-      white-space: nowrap !important;
-    }
-
-    .dropdown-item:hover{ background: rgba(17,24,39,.06) !important; }
-
-    .dropdown-sep{ height: 1px !important; background: rgba(17,24,39,.08) !important; margin: 2px 0 !important; }
-
-    .dropdown-item.logout{
-      color: #b91c1c !important;
-      font-weight: 800 !important;
-    }
-
-    /* hover로도 열림 (main.jsp 동일) */
-    .admin-area:hover .admin-dropdown{
-      opacity: 1 !important;
-      visibility: visible !important;
-      pointer-events: auto !important;
-      transform: translateY(0) !important;
-    }
-  </style>
+  <!-- ✅ 통일 메뉴바 + 청구서 CSS (한 파일로 관리) -->
+  <link rel="stylesheet" href="<%=request.getContextPath()%>/css/billing.css?v=1">
 </head>
 
 <body>
 
-  <!-- ✅ main.jsp와 동일 메뉴바 -->
+  <!-- ✅ TOP NAVBAR (통일본 그대로) -->
   <nav class="navbar">
     <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
 
@@ -264,7 +125,7 @@
       <li><a href="district_manage.jsp">管轄区域管理</a></li>
       <li><a href="overdue_list.jsp">延滞管理</a></li>
       <li><a href="deposit.jsp">入金管理</a></li>
-      <li><a href="billing_list.jsp">請求管理</a></li>
+      <li><a href="billing_list.jsp" class="is-active">請求管理</a></li>
     </ul>
 
     <div class="admin-area" id="adminArea">
@@ -335,30 +196,34 @@
   </div>
 
   <script>
-    // ✅ main.jsp와 동일한 드롭다운 토글
-    const adminArea = document.getElementById("adminArea");
-    const adminDropdown = document.getElementById("adminDropdown");
+    // ✅ ADMIN DROPDOWN (click to toggle)
+    (function () {
+      const adminArea = document.getElementById("adminArea");
+      const adminDropdown = document.getElementById("adminDropdown");
+      if (!adminArea || !adminDropdown) return;
 
-    adminArea.addEventListener("click", function (e) {
-      e.stopPropagation();
-      adminDropdown.classList.toggle("open");
-    });
+      adminArea.addEventListener("click", function (e) {
+        e.stopPropagation();
+        adminDropdown.classList.toggle("open");
+      });
 
-    adminDropdown.addEventListener("click", function (e) {
-      e.stopPropagation();
-    });
+      adminDropdown.addEventListener("click", function (e) {
+        e.stopPropagation();
+      });
 
-    document.addEventListener("click", function () {
-      adminDropdown.classList.remove("open");
-    });
+      document.addEventListener("click", function () {
+        adminDropdown.classList.remove("open");
+      });
+    })();
   </script>
 
 </body>
 </html>
 
 <%
-    if (rs != null) rs.close();
-    if (pstmt != null) pstmt.close();
-    if (connRoot != null) connRoot.close();
-    if (connWsms != null) connWsms.close();
+    // ✅ 리소스 정리
+    try { if (rs != null) rs.close(); } catch(Exception e) {}
+    try { if (pstmt != null) pstmt.close(); } catch(Exception e) {}
+    try { if (connRoot != null) connRoot.close(); } catch(Exception e) {}
+    try { if (connWsms != null) connWsms.close(); } catch(Exception e) {}
 %>
