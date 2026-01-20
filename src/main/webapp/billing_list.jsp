@@ -18,7 +18,6 @@ String billingDate = request.getParameter("billing_date");
 %>
 
 <%
-    // 1. 세션 체크: 관리자 로그인 상태 확인
     String sessionAdminId = (String) session.getAttribute("adminId");
     if (sessionAdminId == null) {
         response.sendRedirect("login.jsp");
@@ -55,46 +54,45 @@ String billingDate = request.getParameter("billing_date");
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>월별 청구 내역 - SMART WATER</title>
+  <title>請求履歴 - SMART WATER</title>
   <link rel="stylesheet" href="css/billing_list.css">
 </head>
 
 <body>
 
-  <!-- ✅ 통합 메뉴바 (5번째 메뉴 언더라인은 CSS에서 nth-child(5)로 고정) -->
-  <nav class="navbar">
+    <nav class="navbar">
     <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
 
-    <ul class="nav-links" id="navLinks">
-      <li><a href="customer_list.jsp">顧客一覧</a></li>
-      <li><a href="district_manage.jsp">管轄区域管理</a></li>
-      <li><a href="overdue_list.jsp">延滞管理</a></li>
-      <li><a href="deposit.jsp">入金管理</a></li>
-      <li><a href="billing_list.jsp">請求管理</a></li>
-    </ul>
+	    <ul class="nav-links" id="navLinks">
+	      <li><a href="customer_list.jsp">顧客一覧</a></li>
+	      <li><a href="district_manage.jsp">管轄区域管理</a></li>
+	      <li><a href="overdue_list.jsp">延滞管理</a></li>
+	      <li><a href="deposit.jsp">入金管理</a></li>
+	      <li><a href="billing_list.jsp">請求管理</a></li>
+	    </ul>
 
-    <div class="admin-area" id="adminArea">
-      <div class="admin-text">
-        <div class="admin-name"><%= (adminName == null ? "" : adminName) %> 様</div>
-        <div class="admin-id">社員番号 <%= (sessionAdminId == null ? "" : sessionAdminId) %></div>
-      </div>
-
-      <div class="admin-icon">
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Z"
-                stroke="#111827" stroke-width="1.6"/>
-          <path d="M3 23c0-4.2 4-7.6 9-7.6s9 3.4 9 7.6"
-                stroke="#111827" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
-      </div>
-
-      <div class="admin-dropdown" id="adminDropdown">
-        <a href="admin.jsp" class="dropdown-item">設定</a>
-        <div class="dropdown-sep"></div>
-        <a href="logout.jsp" class="dropdown-item logout">ログアウト</a>
-      </div>
-    </div>
-  </nav>
+		<div class="admin-area" id="adminArea">
+	      <div class="admin-text">
+	        <div class="admin-name"><%= (adminName == null ? "" : adminName) %> 様</div>
+	        <div class="admin-id">社員番号 <%= (sessionAdminId == null ? "" : sessionAdminId) %></div>
+		</div>
+	
+	    <div class="admin-icon">
+	        <svg viewBox="0 0 24 24" fill="none">
+	          <path d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Z"
+	                stroke="#111827" stroke-width="1.6"/>
+	          <path d="M3 23c0-4.2 4-7.6 9-7.6s9 3.4 9 7.6"
+	                stroke="#111827" stroke-width="1.6" stroke-linecap="round"/>
+	        </svg>
+	    </div>
+	
+	    <div class="admin-dropdown" id="adminDropdown">
+			<a href="admin.jsp" class="dropdown-item">設定</a>
+	        <div class="dropdown-sep"></div>
+	        <a href="logout.jsp" class="dropdown-item logout">ログアウト</a>
+	    </div>
+	    </div>
+	</nav>
 
 <%
     if (billingDate != null && !billingDate.isEmpty()) {
@@ -146,9 +144,11 @@ String billingDate = request.getParameter("billing_date");
 
   <div class="main-container">
     <div class="content-card">
-      <div class="header-section">
-        <div class="title">🗓️ 請求履歴</div>
-      </div>
+    	<div class="title">🗓️ 請求履歴</div>
+        <div class="search-notice">
+        ※ 名前と日付を入力してください。<br>
+        ※ 日付を選択しないと、お客様の最近の通知が照会されます。
+        </div>
 
       <div class="customer">
         <form class="search-box" method="get" action="billing_list.jsp">
@@ -250,7 +250,6 @@ String billingDate = request.getParameter("billing_date");
   </div>
 
   <script>
-    // ✅ ADMIN DROPDOWN (click to toggle)
     const adminArea = document.getElementById("adminArea");
     const adminDropdown = document.getElementById("adminDropdown");
 
