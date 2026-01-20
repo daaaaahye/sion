@@ -7,6 +7,8 @@
   // [0] 세션 체크
   // =========================
   String sessionAdminId = (String) session.getAttribute("adminId");
+  String sessionAdminName = (String) session.getAttribute("adminName");
+
   if (sessionAdminId == null) {
     response.sendRedirect("login.jsp");
     return;
@@ -167,7 +169,7 @@
     }
 
     /* ===============================
-       ✅ TOP NAVBAR (완전 통일/고정 버전)
+       ✅ TOP NAVBAR (main.jsp와 동일)
        =============================== */
     .navbar {
       height: 56px;
@@ -177,8 +179,6 @@
       padding: 0 22px;
       gap: 26px;
       position: relative;
-
-      /* ✅ 한 줄 고정 */
       flex-wrap: nowrap;
     }
 
@@ -188,7 +188,6 @@
       color: #2aa3ff;
       text-decoration: none;
       white-space: nowrap;
-
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -198,13 +197,11 @@
     .nav-links {
       list-style: none;
       display: flex;
-      align-items: stretch; /* ✅ 높이 동일 */
+      align-items: stretch;
       gap: 22px;
       margin: 0;
       padding: 0;
       position: relative;
-
-      /* ✅ 한 줄 고정 + 좁으면 가로 스크롤 */
       flex-wrap: nowrap;
       white-space: nowrap;
       min-width: 0;
@@ -214,8 +211,8 @@
     }
     .nav-links::-webkit-scrollbar { display: none; }
 
-    .nav-links li {
-      display: flex;         /* ✅ baseline 차이 제거 */
+    .nav-links li{
+      display: flex;
       align-items: center;
       flex: 0 0 auto;
     }
@@ -227,18 +224,17 @@
       font-weight: 600;
       white-space: nowrap;
       position: relative;
-
-      /* ✅ 높낮이 완전 고정 */
       height: 56px;
       display: flex;
       align-items: center;
-      padding: 0 4px;     /* 세로 padding 제거 */
+      padding: 0 4px;
       line-height: 1;
     }
+
     .nav-links a:hover { color: #ffffff; }
 
     /* ===============================
-       ✅ ADMIN (통일 버전)
+       ✅ ADMIN (main.jsp와 동일)
        =============================== */
     .admin-area{
       margin-left: auto;
@@ -324,12 +320,16 @@
     }
 
     .dropdown-item:hover { background: rgba(17,24,39,.06); }
-    .dropdown-sep { height: 1px; background: rgba(17,24,39,.08); margin: 2px 0; }
-    .dropdown-item.logout { color: #b91c1c; font-weight: 800; }
 
-    /* hover로도 열리게 */
-    .admin-area:hover .admin-dropdown,
-    .admin-dropdown:hover{
+    .dropdown-sep { height: 1px; background: rgba(17,24,39,.08); margin: 2px 0; }
+
+    .dropdown-item.logout {
+      color: #b91c1c;
+      font-weight: 800;
+    }
+
+    /* ✅ main.jsp처럼 hover로도 열림 */
+    .admin-area:hover .admin-dropdown{
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
@@ -501,57 +501,17 @@
       color: #b91c1c;
     }
 
+    /* ⚠️ main.jsp는 반응형에서 navbar를 세로로 바꾸지 않았으니
+       "완전 동일"을 원하면 여기서 navbar 관련 반응형 변경은 제거하는 게 맞아.
+       (아래는 content만 반응형 유지) */
     @media (max-width: 860px){
       .form{ grid-template-columns: 1fr; }
-
-      .navbar{
-        height: auto;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        padding: 14px 14px;
-      }
-
-      .nav-links{
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        overflow: visible;
-      }
-      .nav-links li{ display:block; }
-      .nav-links a{
-        height: auto;
-        padding: 10px 6px;
-      }
-
-      .admin-area{
-        padding-top: 11px;
-        margin-left: auto;
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding-bottom: 17px;
-      }
-
-      .admin-text{ display:none; }
-
-      .admin-dropdown{
-        left: 50%;
-        right: auto;
-        transform: translate(-50%, 6px);
-      }
-      .admin-dropdown.open{
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-        transform: translate(-50%, 0);
-      }
     }
   </style>
 </head>
 
 <body>
+  <!-- ✅ NAVBAR (main.jsp와 동일 구조/값) -->
   <nav class="navbar">
     <a href="main.jsp" class="navbar-brand">💧 SMART WATER JP</a>
 
@@ -565,8 +525,8 @@
 
     <div class="admin-area" id="adminArea">
       <div class="admin-text">
-        <div class="admin-name"><%= (adminName == null ? "" : adminName) %> 様</div>
-        <div class="admin-id">社員番号 <%= (adminId == null ? "" : adminId) %></div>
+        <div class="admin-name"><%= (sessionAdminName == null ? "" : sessionAdminName) %> 様</div>
+        <div class="admin-id">社員番号 <%= (sessionAdminId == null ? "" : sessionAdminId) %></div>
       </div>
 
       <div class="admin-icon">
@@ -664,7 +624,7 @@
   </main>
 
   <script>
-    // ✅ ADMIN DROPDOWN (click to toggle)
+    // ✅ ADMIN DROPDOWN (click to toggle) - main.jsp 동일
     const adminArea = document.getElementById("adminArea");
     const adminDropdown = document.getElementById("adminDropdown");
 
