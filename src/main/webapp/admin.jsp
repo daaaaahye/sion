@@ -166,6 +166,9 @@
       color: #111827;
     }
 
+    /* ===============================
+       ✅ TOP NAVBAR (완전 통일/고정 버전)
+       =============================== */
     .navbar {
       height: 56px;
       background: #243646;
@@ -174,6 +177,9 @@
       padding: 0 22px;
       gap: 26px;
       position: relative;
+
+      /* ✅ 한 줄 고정 */
+      flex-wrap: nowrap;
     }
 
     .navbar-brand {
@@ -182,15 +188,36 @@
       color: #2aa3ff;
       text-decoration: none;
       white-space: nowrap;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
     }
 
     .nav-links {
       list-style: none;
       display: flex;
-      align-items: center;
+      align-items: stretch; /* ✅ 높이 동일 */
       gap: 22px;
       margin: 0;
       padding: 0;
+      position: relative;
+
+      /* ✅ 한 줄 고정 + 좁으면 가로 스크롤 */
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      min-width: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+
+    .nav-links li {
+      display: flex;         /* ✅ baseline 차이 제거 */
+      align-items: center;
+      flex: 0 0 auto;
     }
 
     .nav-links a {
@@ -198,20 +225,28 @@
       text-decoration: none;
       font-size: 13px;
       font-weight: 600;
-      padding: 18px 4px 14px;
       white-space: nowrap;
-      display: inline-block;
       position: relative;
-    }
 
+      /* ✅ 높낮이 완전 고정 */
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 4px;     /* 세로 padding 제거 */
+      line-height: 1;
+    }
     .nav-links a:hover { color: #ffffff; }
 
+    /* ===============================
+       ✅ ADMIN (통일 버전)
+       =============================== */
     .admin-area{
       margin-left: auto;
       position: relative;
       display: flex;
       align-items: center;
       gap: 10px;
+      flex: 0 0 auto;
     }
 
     .admin-text{
@@ -221,6 +256,7 @@
       line-height: 1.2;
       margin: 0;
       transform: none;
+      white-space: nowrap;
     }
 
     .admin-name {
@@ -239,10 +275,12 @@
       height: 30px;
       border-radius: 50%;
       background: rgba(255,255,255,.92);
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       box-shadow: 0 0 0 2px rgba(255,255,255,.28);
       user-select: none;
+      cursor: pointer;
     }
 
     .admin-icon svg { width: 18px; height: 18px; opacity: .85; }
@@ -289,7 +327,7 @@
     .dropdown-sep { height: 1px; background: rgba(17,24,39,.08); margin: 2px 0; }
     .dropdown-item.logout { color: #b91c1c; font-weight: 800; }
 
-    /* hover로도 열리게 (원하면 유지) */
+    /* hover로도 열리게 */
     .admin-area:hover .admin-dropdown,
     .admin-dropdown:hover{
       opacity: 1;
@@ -298,6 +336,9 @@
       transform: translateY(0);
     }
 
+    /* ===============================
+       ✅ PAGE CONTENT (기존 유지)
+       =============================== */
     .wrap{
       max-width: 1150px;
       margin: 18px auto 80px;
@@ -452,7 +493,6 @@
       color: #16a34a;
     }
 
-    /* ✅ 새 비번 불일치 메시지 */
     .pw-mismatch{
       display:none;
       margin-top: 8px;
@@ -476,8 +516,11 @@
         flex-direction: column;
         align-items: center;
         gap: 6px;
+        overflow: visible;
       }
+      .nav-links li{ display:block; }
       .nav-links a{
+        height: auto;
         padding: 10px 6px;
       }
 
@@ -579,7 +622,6 @@
             <input type="text" value="<%= (adminId == null ? "" : adminId) %>" readonly />
           </div>
 
-          <!-- ✅ (1) 마스킹 표시 + 변경 버튼 -->
           <div class="field" id="maskedBox">
             <label>パスワード</label>
             <div style="display:flex; gap:10px; align-items:center;">
@@ -588,7 +630,6 @@
             </div>
           </div>
 
-          <!-- ✅ (2) 현재 비밀번호 입력 + 확인/인증완료 버튼 -->
           <div class="field" id="verifyBox" style="display:none;">
             <label>現在のパスワード</label>
             <div style="display:flex; gap:10px; align-items:center;">
@@ -596,11 +637,9 @@
                      placeholder="現在のパスワード" autocomplete="current-password" />
               <button class="btn" type="button" id="btnVerify" style="height:44px;">確認</button>
             </div>
-
             <div class="verified-badge" id="verifiedBadge" style="display:none;">認証完了</div>
           </div>
 
-          <!-- ✅ (3) 인증 성공 전에는 "아예 안 보임" -->
           <div id="newPwBox" style="<%= (pwVerified ? "" : "display:none;") %>">
             <div class="field">
               <label>新しいパスワード</label>
@@ -612,13 +651,11 @@
               <label>新しいパスワード（確認）</label>
               <input type="password" name="confirmPassword" id="confirmPw"
                      placeholder="もう一度入力" autocomplete="new-password" />
-              <!-- ✅ 실시간 불일치 메시지 -->
               <div id="pwMismatchMsg" class="pw-mismatch">新しいパスワードが一致しません。</div>
             </div>
           </div>
         </div>
 
-        <!-- ✅ 저장 버튼도 인증 성공 후에만 보이게 -->
         <div class="actions" id="saveBox" style="<%= (pwVerified ? "" : "display:none;") %>">
           <button class="btn" type="submit" id="btnSave">保存</button>
         </div>
@@ -662,10 +699,8 @@
     const confirmPw = document.getElementById("confirmPw");
     const btnSave = document.getElementById("btnSave");
 
-    // ✅ mismatch UI
     const pwMismatchMsg = document.getElementById("pwMismatchMsg");
 
-    // 변경 클릭 -> 현재 비번 입력 표시
     btnChange.addEventListener("click", () => {
       verifyBox.style.display = "block";
       btnVerify.textContent = "確認";
@@ -674,21 +709,17 @@
       document.getElementById("currentPw").focus();
     });
 
-    // 확인 클릭 -> 서버로 인증 요청(action=verify)
     btnVerify.addEventListener("click", () => {
       actionField.value = "verify";
       pwForm.submit();
     });
 
-    // ✅ 새 비밀번호/확인 실시간 검증
     function validateNewPasswords() {
-      // 인증 전이라 새비번 영역이 안 보이면 검사 X
       if (!newPwBox || newPwBox.style.display === "none") return;
 
       const a = (newPw?.value || "").trim();
       const b = (confirmPw?.value || "").trim();
 
-      // 둘 중 하나라도 비어있으면 메시지 숨기고 저장 비활성(입력 중)
       if (a === "" || b === "") {
         if (pwMismatchMsg) pwMismatchMsg.style.display = "none";
         if (btnSave) btnSave.disabled = true;
@@ -704,22 +735,18 @@
       }
     }
 
-    // 입력할 때마다 바로 체크
     if (newPw) newPw.addEventListener("input", validateNewPasswords);
     if (confirmPw) confirmPw.addEventListener("input", validateNewPasswords);
 
-    // 저장 버튼 -> 서버로 저장(action=save)
     btnSave.addEventListener("click", (e) => {
-      // 제출 직전에 한번 더 검사
       validateNewPasswords();
       if (btnSave.disabled) {
-        e.preventDefault(); // submit 막기
+        e.preventDefault();
         return;
       }
       actionField.value = "save";
     });
 
-    // 서버에서 인증완료 상태라면 UI 자동 반영 (새 비번칸 "보이게")
     const pwVerified = <%= (pwVerified ? "true" : "false") %>;
     if (pwVerified) {
       verifyBox.style.display = "block";
@@ -730,13 +757,9 @@
       newPwBox.style.display = "block";
       saveBox.style.display = "flex";
 
-      // 인증 끝나면 새 비번칸에 커서
       if (newPw) newPw.focus();
-
-      // 초기에는 저장 비활성(새/확인 입력 전)
       if (btnSave) btnSave.disabled = true;
 
-      // 혹시 값이 이미 들어있다면(브라우저 자동완성 등) 즉시 검사
       validateNewPasswords();
     }
   </script>
