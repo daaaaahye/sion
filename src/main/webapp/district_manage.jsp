@@ -18,8 +18,8 @@
         Class.forName("org.postgresql.Driver");
         
         // [중요] 요청하신 대로 포트 5432를 사용하며, 각각 wsms와 root DB에 연결합니다.
-        connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "");
-        connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "");
+        connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
+        connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
         
         // [2. root DB의 Administrator 테이블에서 관리자 이름 조회]
         String sqlAdmin = "SELECT name FROM public.\"Administrator\" WHERE id = ?";

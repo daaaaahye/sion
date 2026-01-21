@@ -7,7 +7,7 @@
     Connection conn = null;
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "");
+        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "1234");
 
         // DB에서 사번과 비밀번호가 일치하는지 확인
         String sql = "SELECT emp_id, name FROM admins WHERE emp_id = ? AND password = ?";

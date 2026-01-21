@@ -24,7 +24,7 @@
 
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "");
+        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "1234");
 
         // 3. 접속 중인 관리자 정보 조회 (상단 바 표시용)
         String sqlAdmin = "SELECT name FROM admins WHERE emp_id = ?";
