@@ -145,7 +145,7 @@
                         pstmt.setInt(1, pageSize); pstmt.setInt(2, offset);
                         ResultSet rs = pstmt.executeQuery();
 
-<<<<<<< HEAD
+
                         while(rs.next()){
                             String cid = rs.getString("customer_id"); String bDateStr = rs.getString("billing_date"); long amount = rs.getLong("bill_amount");
                             // paid_record가 존재하면 날짜 상관없이 이 고객은 입금한 것으로 간주
@@ -171,7 +171,7 @@
                     <% } %>
                 </tbody>
             </table>
-=======
+
     <% 
     //파일 수정 테스트..............................................
         // POST 방식으로 데이터가 전송되었을 때 처리
@@ -192,7 +192,7 @@
         } 
     %>
 </div>
->>>>>>> refs/remotes/origin/dev
+
 
             <div class="pagination">
                 <a href="?status=<%=searchStatus%>&page=1" class="page-item">«</a>
