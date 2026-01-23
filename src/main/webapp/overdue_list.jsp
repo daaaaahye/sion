@@ -40,15 +40,6 @@
 
     try {
         Class.forName("org.postgresql.Driver");
-<<<<<<< HEAD
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "1234");
-
-        String sqlAdmin = "SELECT name FROM admins WHERE emp_id = ?";
-        PreparedStatement pstmtAdmin = conn.prepareStatement(sqlAdmin);
-        pstmtAdmin.setString(1, sessionAdminId);
-        ResultSet rsAdmin = pstmtAdmin.executeQuery();
-        if(rsAdmin.next()) { adminName = rsAdmin.getString("name"); }
-=======
         conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
         String sql =
             "WITH BillingSummary AS (SELECT customer_id, COALESCE(SUM(paid_amount), 0) as total_paid FROM deposit WHERE paid_at <= ? GROUP BY customer_id), " +
@@ -59,7 +50,6 @@
         pstmt.setDate(1, sqlBaseDate);
         pstmt.setDate(2, sqlBaseDate);
         rs = pstmt.executeQuery();
->>>>>>> refs/remotes/origin/dev
 %>
 
 <!DOCTYPE html>

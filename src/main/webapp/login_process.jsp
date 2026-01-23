@@ -4,15 +4,8 @@
 <%
 request.setCharacterEncoding("UTF-8");
 
-<<<<<<< HEAD
-    Connection conn = null;
-    try {
-        Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "1234");
-=======
 String empId = request.getParameter("emp_id");
 String password = request.getParameter("password");
->>>>>>> refs/remotes/origin/dev
 
 // 서버에서도 빈값 방어
 if (empId == null || password == null || empId.trim().isEmpty() || password.trim().isEmpty()) {
