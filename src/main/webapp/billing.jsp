@@ -369,8 +369,15 @@
                 long totalBilled = rs.getLong("total_billed");
                 long totalPaid = rs.getLong("total_paid");
 
+<<<<<<< HEAD
+            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "1234");
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM customers WHERE meter_id = ?");
+            pstmt.setString(1, id);
+            ResultSet rs = pstmt.executeQuery();
+=======
                 long overdueAmount = (totalBilled - totalPaid) - monthlyBill;
                 if (overdueAmount < 0) overdueAmount = 0;
+>>>>>>> refs/remotes/origin/dev
 
                 long finalTotal = monthlyBill + overdueAmount;
         %>
