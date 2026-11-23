@@ -2,6 +2,7 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="java.text.*" %>
 <%@ page import="java.util.*" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
 PreparedStatement pstmt = null;
 PreparedStatement pstmtDate = null;
@@ -35,8 +36,8 @@ String billingDate = request.getParameter("billing_date");
     try {
         Class.forName("org.postgresql.Driver");
 
-        connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
-        connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        connRoot = sionConnect("root");
+        connWsms = sionConnect("wsms");
 
         String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";
         PreparedStatement pstmtAdmin = connRoot.prepareStatement(sqlAdmin);

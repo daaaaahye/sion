@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
     String sessionAdminId = (String) session.getAttribute("adminId");
     String adminName = (String) session.getAttribute("adminName");
@@ -38,8 +39,8 @@
 
     try {
         Class.forName("org.postgresql.Driver");
-        connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
-        connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        connRoot = sionConnect("root");
+        connWsms = sionConnect("wsms");
 
 
         String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";

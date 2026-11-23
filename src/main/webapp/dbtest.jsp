@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
     // [1. セキュリティ及びセッションチェック] ログイン状態の確認
     String sessionAdminId = (String) session.getAttribute("adminId");
@@ -12,7 +13,7 @@
     Connection conn = null;
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/mydb", "postgres", "1234");
+        conn = sionConnect("mydb");
         
         // [2. DBから実際の管理者名を取得] セッションの社員番号(sessionAdminId)基準
         String sqlAdmin = "SELECT name FROM admins WHERE emp_id = ?";

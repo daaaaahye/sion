@@ -1,14 +1,12 @@
 <%@ page import="java.sql.*" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
-    String url = "jdbc:postgresql://localhost:5432/wsms";
-    String user = "postgres";
-    String password = "1234";
 
     Connection conn = null;
 
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection(url, user, password);
+        conn = sionConnect("wsms");
     } catch (Exception e) {
         e.printStackTrace();
     }

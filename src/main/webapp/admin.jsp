@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
   request.setCharacterEncoding("UTF-8");
 
@@ -17,9 +18,6 @@
   // =========================
   // [1] DB 연결 정보
   // =========================
-  String DB_URL  = "jdbc:postgresql://localhost:5432/root";
-  String DB_USER = "postgres";
-  String DB_PASS = "1234";
 
   Connection conn = null;
   PreparedStatement pstmt = null;
@@ -37,7 +35,7 @@
 
   try {
     Class.forName("org.postgresql.Driver");
-    conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+    conn = sionConnect("root");
 
     // =========================
     // [2] POST 처리: verify(현재 비번 인증) / save(새 비번 저장)

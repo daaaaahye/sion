@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
     // 1. 세션 및 파라미터 체크
     String sessionAdminId = (String) session.getAttribute("adminId");
@@ -35,8 +36,8 @@
         Class.forName("org.postgresql.Driver");
 
         // 2. DB 연결
-        connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
-        connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        connRoot = sionConnect("root");
+        connWsms = sionConnect("wsms");
 
         // 3. 관리자 이름 동기화
         String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";

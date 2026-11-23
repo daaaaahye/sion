@@ -1,1 +1,4 @@
 /build/
+/bin/
+.env
+src/main/webapp/WEB-INF/.env

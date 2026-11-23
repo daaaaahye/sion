@@ -3,6 +3,7 @@
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="java.util.Locale" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 
 <%
     /* [1. 세션 및 관리자 정보 로직 유지] */
@@ -40,7 +41,7 @@
 
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        conn = sionConnect("wsms");
         String sql =
             "WITH BillingSummary AS (SELECT customer_id, COALESCE(SUM(paid_amount), 0) as total_paid FROM deposit WHERE paid_at <= ? GROUP BY customer_id), " +
             "UnpaidDetails AS (SELECT b.customer_id, b.billing_date, SUM(b.bill_amount) OVER (PARTITION BY b.customer_id ORDER BY b.billing_date ASC) as cumulative_bill, s.total_paid FROM bill b LEFT JOIN BillingSummary s ON b.customer_id = s.customer_id WHERE b.billing_date <= ?) " +

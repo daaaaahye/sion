@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 
 <%
     request.setCharacterEncoding("UTF-8");
@@ -13,11 +14,7 @@
 
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection(
-            "jdbc:postgresql://localhost:5432/wsms",
-            "postgres",
-            "1234"
-        );
+        conn = sionConnect("wsms");
 
         // ✅ DB 컬럼에 맞춰서 조회
         String sql = "SELECT name, district, address FROM customers ORDER BY district ASC, name ASC";

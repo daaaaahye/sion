@@ -2,6 +2,7 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="java.text.DecimalFormat" %>
 <%@ page import="java.util.Random" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
     // 1. 세션 체크: 관리자 로그인 상태 확인
     String sessionAdminId = (String) session.getAttribute("adminId");
@@ -29,8 +30,8 @@
     try {
         Class.forName("org.postgresql.Driver");
 
-        connRoot = DriverManager.getConnection("jdbc:postgresql://localhost:5432/root", "postgres", "1234");
-        connWsms = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        connRoot = sionConnect("root");
+        connWsms = sionConnect("wsms");
 
         // 관리자 이름 동기화
         String sqlAdmin = "SELECT name FROM \"Administrator\" WHERE id = ?";

@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
     String customerId = request.getParameter("id");
     String amount = request.getParameter("amount");
@@ -8,7 +9,7 @@
     try {
         Class.forName("org.postgresql.Driver");
         // 포트 5432 고정
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        conn = sionConnect("wsms");
 
         // [핵심] deposit 테이블에 입금 내역 저장
         String sql = "INSERT INTO deposit (customer_id, paid_at, paid_amount) VALUES (?, CURRENT_TIMESTAMP, ?)";

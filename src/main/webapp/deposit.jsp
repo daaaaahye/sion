@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
     request.setCharacterEncoding("UTF-8");
     response.setContentType("text/html; charset=UTF-8");
@@ -23,7 +24,7 @@
 
     try {
         Class.forName("org.postgresql.Driver");
-        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/wsms", "postgres", "1234");
+        conn = sionConnect("wsms");
 
         String condition = " WHERE 1=1 ";
         if(searchStatus.equals("unpaid")) condition += " AND d.customer_id IS NULL AND b.billing_date >= CURRENT_DATE - INTERVAL '1 month'";

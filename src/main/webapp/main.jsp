@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 <%
    /* 로그인 확인 */
     String sessionAdminId = (String) session.getAttribute("adminId");
@@ -22,11 +23,7 @@
     try {
         Class.forName("org.postgresql.Driver");
 
-        connWsms = DriverManager.getConnection(
-            "jdbc:postgresql://localhost:5432/wsms",
-            "postgres",
-            "1234"
-        );
+        connWsms = sionConnect("wsms");
 
         /* 총 고객수 계산 및 변수 저장 */
         String totalSql = "SELECT COUNT(*) FROM public.customers";

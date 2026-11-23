@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.Connection,java.sql.DriverManager,java.sql.PreparedStatement,java.sql.ResultSet" %>
+<%@ include file="/WEB-INF/dbconfig.jspf" %>
 
 <%
 request.setCharacterEncoding("UTF-8");
@@ -20,11 +21,7 @@ ResultSet rs = null;
 try {
     Class.forName("org.postgresql.Driver");
 
-    conn = DriverManager.getConnection(
-        "jdbc:postgresql://localhost:5432/root",
-        "postgres",
-        "1234"
-    );
+    conn = sionConnect("root");
 
     String sql = "SELECT id, name FROM public.\"Administrator\" WHERE id = ? AND password = ?";
     pstmt = conn.prepareStatement(sql);
