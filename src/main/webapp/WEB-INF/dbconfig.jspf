@@ -1,0 +1,29 @@
+<%@ page import="java.io.InputStream, java.io.InputStreamReader, java.io.IOException" %>
+<%!
+    // DB 접속 정보는 코드에 두지 않는다.
+    // 환경변수(DB_HOST, DB_PORT, DB_USER, DB_PASSWORD) 또는 WEB-INF/.env 파일에서 읽는다. 예시는 WEB-INF/.env.example 참고.
+    private java.util.Properties sionEnvFile;
+
+    private synchronized String sionEnv(String key, String def) {
+        String v = System.getenv(key);
+        if (v != null && !v.isEmpty()) return v;
+        if (sionEnvFile == null) {
+            sionEnvFile = new java.util.Properties();
+            try (InputStream in = getServletContext().getResourceAsStream("/WEB-INF/.env")) {
+                if (in != null) sionEnvFile.load(new InputStreamReader(in, "UTF-8"));
+            } catch (IOException e) { /* .env 가 없으면 환경변수 값만 쓴다 */ }
+        }
+        return sionEnvFile.getProperty(key, def);
+    }
+
+    private java.sql.Connection sionConnect(String database) throws Exception {
+        Class.forName("org.postgresql.Driver");
+        String password = sionEnv("DB_PASSWORD", null);
+        if (password == null) {
+            throw new IllegalStateException("DB_PASSWORD 가 설정되지 않았습니다. WEB-INF/.env.example 을 복사해 WEB-INF/.env 를 만들어 주세요.");
+        }
+        return java.sql.DriverManager.getConnection(
+            "jdbc:postgresql://" + sionEnv("DB_HOST", "localhost") + ":" + sionEnv("DB_PORT", "5432") + "/" + database,
+            sionEnv("DB_USER", "postgres"), password);
+    }
+%>
